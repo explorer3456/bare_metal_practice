@@ -22,9 +22,11 @@
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+extern void initialise_monitor_handles(void);
 #include <stdio.h>
 int main(void)
 {
+	initialise_monitor_handles();
     /* Loop forever */
 	printf("hello\n");
 	for(;;);
