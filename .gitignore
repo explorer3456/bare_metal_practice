@@ -1,0 +1,5 @@
+*.launch
+*.cfg
+.*project
+.settings
+.*/Debug
