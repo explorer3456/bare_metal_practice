@@ -25,10 +25,10 @@
 int main(void)
 {
 
-	int val = 10;
+	uint32_t control_reg;
 
-    /* Loop forever */
-	__asm__ volatile ("MOV R0, %0": : "r"(0x50));
+	__asm__ volatile ("MRS %0, CONTROL":"=r"(control_reg));
+	//_asm__ volatile ("MOV R0, %0"::"r"(control_reg));
 
 	for(;;);
 }
