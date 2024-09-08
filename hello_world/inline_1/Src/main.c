@@ -24,6 +24,17 @@
 
 int main(void)
 {
+
+
     /* Loop forever */
+
+
+	__asm__ volatile("LDR R1,=0x20001000");
+	__asm__ volatile("LDR R2,=0x20001004");
+	__asm__ volatile("LDR R0, [R1]");
+	__asm__ volatile("LDR R1, [R2]");
+	__asm__ volatile("ADD R0,R0,R1");
+	__asm__ volatile("STR R0, [R2]");
+
 	for(;;);
 }
