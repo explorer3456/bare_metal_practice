@@ -24,11 +24,13 @@
 
 int main(void)
 {
+	int a;
+	int b;
 
-	uint32_t control_reg;
+	a = 20;
+	b = 15;
 
-	__asm__ volatile ("MRS %0, CONTROL":"=r"(control_reg));
-	//_asm__ volatile ("MOV R0, %0"::"r"(control_reg));
+	__asm__("MOV %0, %1":"=r"(b):"r"(a));
 
 	for(;;);
 }
