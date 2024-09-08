@@ -25,12 +25,11 @@
 int main(void)
 {
 	int a;
-	int b;
+	int * ptr;
 
-	a = 20;
-	b = 15;
+	ptr = (int *)0x20000008;
 
-	__asm__("MOV %0, %1":"=r"(b):"r"(a));
+	__asm__ volatile ("LDR %0, [%1]":"=r"(a):"r"(ptr));
 
 	for(;;);
 }
