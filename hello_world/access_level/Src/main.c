@@ -18,6 +18,20 @@
 
 #include <stdint.h>
 
+void generate_interrupt(void)
+{
+       uint32_t *pSTIR = (uint32_t *)0xE000EF00;
+       uint32_t *pISER0 = (uint32_t *)0xE000E100;
+
+       // enable IRQ3
+       *pISER0 |= (1<<3);
+
+       // generate SWI
+       *pSTIR = (0x3);
+
+}
+
+
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
@@ -25,5 +39,15 @@
 int main(void)
 {
     /* Loop forever */
+	printf("heeee\n");
+
+	generate_interrupt();
+
+	printf("hooooo\n");
 	for(;;);
+}
+
+void RTC_WKUP_IRQHandler(void)
+{
+	printf("in handler mode\n");
 }
