@@ -28,7 +28,7 @@ int main(void)
 	int val = 10;
 
     /* Loop forever */
-	__asm__ volatile ("MOV R0, %0": : "r"(val));
+	__asm__ volatile ("MOV R0, %0": : "i"(0x50));
 
 	for(;;);
 }
