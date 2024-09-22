@@ -31,6 +31,16 @@ void generate_interrupt(void)
 
 }
 
+void change_access_level_unpriv(void)
+{
+	int control_reg;
+
+	__asm__ ("MRS %0, CONTROL":"=r"(control_reg));
+
+	control_reg |= 0x1;
+
+	__asm__ ("MSR CONTROL, %0"::"r"(control_reg));
+}
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -40,6 +50,8 @@ int main(void)
 {
     /* Loop forever */
 	printf("heeee\n");
+
+	change_access_level_unpriv();
 
 	generate_interrupt();
 
