@@ -63,3 +63,11 @@ void RTC_WKUP_IRQHandler(void)
 {
 	printf("in handler mode\n");
 }
+
+void HardFault_Handler(void)
+{
+	printf("hard fault detected");
+	while(1);
+
+}
+
