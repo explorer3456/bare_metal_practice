@@ -51,7 +51,13 @@ int main(void)
     /* Loop forever */
 	printf("heeee\n");
 
+	// when you assign function pointer, compiler auto matcially assign LSB of "change_access_level_unpriv"
+	// to 1. You can see that change access_level_unpriv function's address is even number such as 0x800700.
+	// However, when you assign the address value of change_..x to func_ptr, the compiler put one bit to the address
+	// Hence the func_ptr = 0x800701.
+	// This is because Cortex M4 always run in thumb state.
 	func_ptr = change_access_level_unpriv;
+
 	//change_access_level_unpriv();
 	func_ptr();
 
