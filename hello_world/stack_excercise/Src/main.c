@@ -60,9 +60,21 @@ int func_add(int a, int b, int c, int d)
 int main(void)
 {
 	int ret;
+	int PSP_reg;
+	int control_reg;
 	void (*func_ptr)(void);
     /* Loop forever */
 	printf("heeee\n");
+
+	// Set PSP value.
+	PSP_reg = PSP_START;
+	__asm__("MSR PSP, %0"::"r"(PSP_reg));
+
+	__asm__("MRS %0, CONTROL":"=r"(control_reg));
+
+	control_reg |= (0x1<<1);
+
+	__asm__("MSR CONTROL, %0"::"r"(control_reg));
 
 	ret = func_add(1,4,5,6);
 
