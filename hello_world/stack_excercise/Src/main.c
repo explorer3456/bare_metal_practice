@@ -17,6 +17,13 @@
  */
 #include <stdint.h>
 
+#define SRAM_START	(0x20000000)
+#define SRAM_SIZE	(0x20000) // 128 KB
+#define MSP_START	(SRAM_START+SRAM_SIZE)
+#define MSP_SIZE	(0x400) // 512Byte
+#define PSP_START	(MSP_START - MSP_SIZE)
+#define PSP_SIZE	(0x400) // 512Byte
+
 void generate_interrupt(void)
 {
        uint32_t *pSTIR = (uint32_t *)0xE000EF00;
