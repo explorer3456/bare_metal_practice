@@ -17,12 +17,7 @@
  */
 #include <stdint.h>
 
-#define SRAM_START	(0x20000000)
-#define SRAM_SIZE	(0x20000) // 128 KB
-#define MSP_START	(SRAM_START+SRAM_SIZE)
-#define MSP_SIZE	(0x400) // 512Byte
-#define PSP_START	(MSP_START - MSP_SIZE)
-#define PSP_SIZE	(0x400) // 512Byte
+
 
 void generate_interrupt(void)
 {
@@ -35,6 +30,11 @@ void generate_interrupt(void)
        // generate SWI
        *pSTIR = (0x3);
 
+}
+
+void generate_exception(void)
+{
+	__asm__ ("SVC 0x2");
 }
 
 void change_access_level_unpriv(void)
@@ -53,28 +53,46 @@ int func_add(int a, int b, int c, int d)
 	return a+b+c+d;
 }
 
+/*
+#define SRAM_BASE	(0x20000000)
+#define SRAM_SIZE	(0x20000) // 128 KB
+
+#define MSP_SIZE	(512)
+#define MSP_BASE	(SRAM_BASE + SRAM_SIZE - MSP_SIZE) // 512 Byte is size of MSP
+
+#define PSP_SIZE	(512) // 512Byte
+#define PSP_BASE	(MSP_BASE - PSP_SIZE)
+*/
+
+__attribute__((naked)) void change_sp_to_psp(void)
+{
+	__asm__ (".equ SRAM_BASE, 0x20000000");
+	__asm__ (".equ SRAM_SIZE, 0x20000");
+	__asm__ (".equ MSP_SIZE, 512");
+	__asm__ (".equ MSP_BASE, (SRAM_BASE + SRAM_SIZE - MSP_SIZE)");
+	__asm__ (".equ PSP_SIZE, 512");
+	__asm__ (".equ PSP_BASE, (MSP_BASE - PSP_SIZE)");
+
+	__asm__ ("LDR R0, =(PSP_BASE + PSP_SIZE)"); // PSP value
+	__asm__ ("MSR PSP, R0");
+	__asm__ ("MRS R0, CONTROL");
+	__asm__ ("ORR R0, 0X2"); // Set SPSEL to 1. PSP select.
+	__asm__ ("MSR CONTROL, R0");
+	__asm__ ("BX LR");
+}
+
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
 int main(void)
 {
+	change_sp_to_psp();
+
 	int ret;
-	int PSP_reg;
-	int control_reg;
 	void (*func_ptr)(void);
     /* Loop forever */
 	printf("heeee\n");
-
-	// Set PSP value.
-	PSP_reg = PSP_START;
-	__asm__("MSR PSP, %0"::"r"(PSP_reg));
-
-	__asm__("MRS %0, CONTROL":"=r"(control_reg));
-
-	control_reg |= (0x1<<1);
-
-	__asm__("MSR CONTROL, %0"::"r"(control_reg));
 
 	ret = func_add(1,4,5,6);
 
@@ -106,4 +124,9 @@ void HardFault_Handler(void)
 	printf("hard fault detected");
 	while(1);
 
+}
+void SVC_Handler(void)
+{
+	printf("SVC handler");
+	while(1);
 }
