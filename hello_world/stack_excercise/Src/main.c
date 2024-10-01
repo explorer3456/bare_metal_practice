@@ -41,15 +41,25 @@ void change_access_level_unpriv(void)
 	__asm__ ("MSR CONTROL, %0"::"r"(control_reg));
 }
 
+int func_add(int a, int b, int c, int d)
+{
+	return a+b+c+d;
+}
+
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
 int main(void)
 {
+	int ret;
 	void (*func_ptr)(void);
     /* Loop forever */
 	printf("heeee\n");
+
+	ret = func_add(1,4,5,6);
+
+	printf("result: %d\n", ret);
 
 	// when you assign function pointer, compiler auto matcially assign LSB of "change_access_level_unpriv"
 	// to 1. You can see that change access_level_unpriv function's address is even number such as 0x800700.
