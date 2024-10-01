@@ -64,7 +64,7 @@ int func_add(int a, int b, int c, int d)
 #define PSP_BASE	(MSP_BASE - PSP_SIZE)
 */
 
-__attribute__((naked)) void change_sp_to_psp(void)
+__attribute__((naked))void change_sp_to_psp(void)
 {
 	__asm__ (".equ SRAM_BASE, 0x20000000");
 	__asm__ (".equ SRAM_SIZE, 0x20000");
@@ -98,6 +98,7 @@ int main(void)
 
 	printf("result: %d\n", ret);
 
+	generate_exception();
 	// when you assign function pointer, compiler auto matcially assign LSB of "change_access_level_unpriv"
 	// to 1. You can see that change access_level_unpriv function's address is even number such as 0x800700.
 	// However, when you assign the address value of change_..x to func_ptr, the compiler put one bit to the address
