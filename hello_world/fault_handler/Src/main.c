@@ -48,7 +48,7 @@ int main(void)
 	// pSRAM = (uint32_t *)PERI_BASE;
 
 
-	func_ptr = (void *)((uint32_t )pSRAM + 0x1);
+	func_ptr = (void *)((uint32_t )pSRAM);
 	func_ptr();
 
 	//data /= 0;
