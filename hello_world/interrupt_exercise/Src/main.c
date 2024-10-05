@@ -76,7 +76,7 @@ int main(void)
 {
 
 	NVIC_configure_priority(USART3_IRQ_NUMBER, 0x80);
-	NVIC_configure_priority(USART1_IRQ_NUMBER, 0x80);
+	NVIC_configure_priority(USART1_IRQ_NUMBER, 0x70);
 
 	NVIC_configure_pending(USART3_IRQ_NUMBER);
 	NVIC_configure_enable(USART1_IRQ_NUMBER);
