@@ -20,6 +20,8 @@
 #include <stdio.h>
 
 #define SCB_SHCSR_BASE	(0xE000ED24)
+#define SRAM_BASE	(0x20000000)
+#define PERI_BASE	(0x40000000)
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -28,6 +30,10 @@
 int main(void)
 {
 	uint32_t *pSHCSR;
+	uint32_t *pSRAM;
+
+	void (*func_ptr)(void);
+
 	int data = 10;
 	// 1. enable all configurable system exceptions.
 
@@ -37,8 +43,15 @@ int main(void)
 	// 2. implement fault handlers
 
 	// 3. force the processor to execute some undefeined instruction.
+	// pSRAM = (uint32_t *)SRAM_BASE;
+	// *pSRAM = 0xFFFF0000; // undefined instruction.
+	pSRAM = (uint32_t *)PERI_BASE;
 
-	data /= 0;
+
+	func_ptr = pSRAM;
+	func_ptr();
+
+	//data /= 0;
 	// 4. analyze the faults.
     /* Loop forever */
 	for(;;);
@@ -47,20 +60,24 @@ int main(void)
 void MemManage_Handler(void)
 {
 	printf("Mem fault");
+	while(1);
 
 }
 void BusFault_Handler(void)
 {
 	printf("Bus fault");
+	while(1);
 }
+
 
 void UsageFault_Handler(void)
 {
 	printf("Usage fault");
-
+	while(1);
 }
 
 void HardFault_Handler(void)
 {
 	printf("Hard fault");
+	while(1);
 }
