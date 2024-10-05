@@ -43,12 +43,12 @@ int main(void)
 	// 2. implement fault handlers
 
 	// 3. force the processor to execute some undefeined instruction.
-	// pSRAM = (uint32_t *)SRAM_BASE;
-	// *pSRAM = 0xFFFF0000; // undefined instruction.
-	pSRAM = (uint32_t *)PERI_BASE;
+	pSRAM = (uint32_t *)SRAM_BASE;
+	*pSRAM = 0xFFFF0000; // undefined instruction.
+	// pSRAM = (uint32_t *)PERI_BASE;
 
 
-	func_ptr = pSRAM;
+	func_ptr = (void *)((uint32_t )pSRAM + 0x1);
 	func_ptr();
 
 	//data /= 0;
