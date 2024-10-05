@@ -17,31 +17,28 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+#define USART3_IRQ_NUMBER	39
 int main(void)
 {
-	int *pNVIC_IPSR;
-	int *pNVIC_ISER;
-	int data;
+	uint32_t *pNVIC_IPSR;
+	uint32_t *pNVIC_ISER;
+	uint32_t data;
 	// 1. Manually pend the pending bit for the USART3 IRQ number in NVIC.
 	// USART3 IRQ number is 39.
 
 	printf("hello\n");
-	pNVIC_IPSR = (int *)((void *)0xE000E200 + 0x4);
-	data = *((int *)pNVIC_IPSR);
-	data |= (1<<7); // set IRQ39
-	*pNVIC_IPSR = data;
 
-	// 2. enable the USART3 IRQ number in NVIC.
-	pNVIC_ISER = (int *)((void *)0xE000E100 + 0x4);
-	data = *((int *)pNVIC_ISER);
-	data |= (1<<7);
-	*pNVIC_ISER = data;
+	pNVIC_IPSR = (uint32_t *)0xE000E200 + (USART3_IRQ_NUMBER/32);
+	*pNVIC_IPSR |= ( 1 << (USART3_IRQ_NUMBER % 32));
 
+	pNVIC_ISER = (uint32_t *)0xE000E100 + (USART3_IRQ_NUMBER/32);
+	*pNVIC_ISER |= ( 1 << (USART3_IRQ_NUMBER % 32));
 
     /* Loop forever */
 	for(;;);
