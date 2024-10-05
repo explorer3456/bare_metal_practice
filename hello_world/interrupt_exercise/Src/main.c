@@ -24,6 +24,31 @@
 
 int main(void)
 {
+	int *pNVIC_IPSR;
+	int *pNVIC_ISER;
+	int data;
+	// 1. Manually pend the pending bit for the USART3 IRQ number in NVIC.
+	// USART3 IRQ number is 39.
+
+	printf("hello\n");
+	pNVIC_IPSR = (int *)((void *)0xE000E200 + 0x4);
+	data = *((int *)pNVIC_IPSR);
+	data |= (1<<7); // set IRQ39
+	*pNVIC_IPSR = data;
+
+	// 2. enable the USART3 IRQ number in NVIC.
+	pNVIC_ISER = (int *)((void *)0xE000E100 + 0x4);
+	data = *((int *)pNVIC_ISER);
+	data |= (1<<7);
+	*pNVIC_ISER = data;
+
+
     /* Loop forever */
 	for(;;);
+}
+
+void USART3_IRQHandler(void)
+{
+	printf("usart3\n");
+	while(1);
 }
