@@ -17,6 +17,9 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
+
+#define SCB_SHCSR_BASE	(0xE000ED24)
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -24,6 +27,40 @@
 
 int main(void)
 {
+	uint32_t *pSHCSR;
+	int data = 10;
+	// 1. enable all configurable system exceptions.
+
+	pSHCSR = (uint32_t *)SCB_SHCSR_BASE;
+	*pSHCSR |= (1<<18)|(1<<17)|(1<<16); // enable Usage fault, Bus fault, Mem fault.
+
+	// 2. implement fault handlers
+
+	// 3. force the processor to execute some undefeined instruction.
+
+	data /= 0;
+	// 4. analyze the faults.
     /* Loop forever */
 	for(;;);
+}
+
+void MemManage_Handler(void)
+{
+	printf("Mem fault");
+
+}
+void BusFault_Handler(void)
+{
+	printf("Bus fault");
+}
+
+void UsageFault_Handler(void)
+{
+	printf("Usage fault");
+
+}
+
+void HardFault_Handler(void)
+{
+	printf("Hard fault");
 }
