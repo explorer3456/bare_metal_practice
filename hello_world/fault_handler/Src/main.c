@@ -23,6 +23,9 @@
 #define SRAM_BASE	(0x20000000)
 #define PERI_BASE	(0x40000000)
 
+#define SCB_UFSR_BASE	(0xE000ED2A)
+#define SCB_MMSR_BASE	(0xE000ED28)
+
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
@@ -31,6 +34,8 @@ int main(void)
 {
 	uint32_t *pSHCSR;
 	uint32_t *pSRAM;
+
+	printf("hello\n");
 
 	void (*func_ptr)(void);
 
@@ -51,6 +56,7 @@ int main(void)
 	func_ptr = (void *)((uint32_t )pSRAM);
 	func_ptr();
 
+	printf("bye\n");
 	//data /= 0;
 	// 4. analyze the faults.
     /* Loop forever */
@@ -72,7 +78,13 @@ void BusFault_Handler(void)
 
 void UsageFault_Handler(void)
 {
-	printf("Usage fault");
+
+	uint32_t * pUFSR = (uint32_t *)SCB_UFSR_BASE;
+	uint32_t data;
+
+	data = *pUFSR;
+	printf("Usage fault status: %08x\n", data);
+	printf("usage fault\n");
 	while(1);
 }
 
