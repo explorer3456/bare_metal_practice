@@ -24,21 +24,63 @@
 #endif
 
 #define USART3_IRQ_NUMBER	39
+#define USART1_IRQ_NUMBER	37
+
+#define NVIC_ISER_BASE	(0xE000E100)
+#define NVIC_ISPR_BASE	(0xE000E200)
+#define NVIC_IPR_BASE	(0xE000E400)
+
+#define NVIC_TOTAL_BIT_WIDTH	(32)
+#define NVIC_BIT_WIDTH	(1)
+#define NVIC_NUM_OF_FIELD	(NVIC_TOTAL_BIT_WIDTH / NVIC_BIT_WIDTH)
+
+#define NVIC_IPR_TOTAL_BIT_WIDTH	(32)
+#define NVIC_IPR_PRIO_BIT_WIDTH		(8)
+#define NVIC_IPR_NUM_OF_FIELD	(NVIC_IPR_TOTAL_BIT_WIDTH / NVIC_IPR_PRIO_BIT_WIDTH	)
+
+void NVIC_configure_priority(uint8_t irq, uint8_t prio)
+{
+	uint32_t * pIPR_BASE;
+	uint32_t pos;
+
+	pIPR_BASE = (uint32_t *)NVIC_IPR_BASE + irq/(NVIC_IPR_NUM_OF_FIELD);
+	pos = (irq % (NVIC_IPR_NUM_OF_FIELD)) * (NVIC_IPR_PRIO_BIT_WIDTH);
+
+	*pIPR_BASE &= ~(((1<<NVIC_IPR_PRIO_BIT_WIDTH) - 1) << pos); // clear the priority.
+	*pIPR_BASE |= (prio << pos);; // configure priority
+}
+
+void NVIC_configure_pending(uint8_t irq)
+{
+	uint32_t * pISPR_BASE;
+	uint32_t pos;
+
+	pISPR_BASE = (uint32_t *)NVIC_ISPR_BASE + irq/(NVIC_NUM_OF_FIELD);
+	pos = (irq % NVIC_NUM_OF_FIELD) * NVIC_BIT_WIDTH;
+
+	*pISPR_BASE |= (1<<pos); // configure pending.
+}
+
+void NVIC_configure_enable(uint8_t irq)
+{
+	uint32_t * pISER_BASE;
+	uint32_t pos;
+
+	pISER_BASE = (uint32_t *)NVIC_ISER_BASE + irq/(NVIC_NUM_OF_FIELD);
+	pos = (irq % NVIC_NUM_OF_FIELD) * NVIC_BIT_WIDTH;
+
+	*pISER_BASE |= (1<<pos); // enable interrupt.
+}
+
 int main(void)
 {
-	uint32_t *pNVIC_IPSR;
-	uint32_t *pNVIC_ISER;
-	uint32_t data;
-	// 1. Manually pend the pending bit for the USART3 IRQ number in NVIC.
-	// USART3 IRQ number is 39.
 
-	printf("hello\n");
+	NVIC_configure_priority(USART3_IRQ_NUMBER, 0x80);
+	NVIC_configure_priority(USART1_IRQ_NUMBER, 0x80);
 
-	pNVIC_IPSR = (uint32_t *)0xE000E200 + (USART3_IRQ_NUMBER/32);
-	*pNVIC_IPSR |= ( 1 << (USART3_IRQ_NUMBER % 32));
-
-	pNVIC_ISER = (uint32_t *)0xE000E100 + (USART3_IRQ_NUMBER/32);
-	*pNVIC_ISER |= ( 1 << (USART3_IRQ_NUMBER % 32));
+	NVIC_configure_pending(USART3_IRQ_NUMBER);
+	NVIC_configure_enable(USART1_IRQ_NUMBER);
+	NVIC_configure_enable(USART3_IRQ_NUMBER);
 
     /* Loop forever */
 	for(;;);
@@ -47,5 +89,11 @@ int main(void)
 void USART3_IRQHandler(void)
 {
 	printf("usart3\n");
+	NVIC_configure_pending(USART1_IRQ_NUMBER);
 	while(1);
+}
+
+void USART1_IRQHandler(void)
+{
+	printf("usart1\n");
 }
