@@ -53,7 +53,7 @@ int main(void)
 	// pSRAM = (uint32_t *)PERI_BASE;
 
 
-	func_ptr = (void *)((uint32_t )pSRAM);
+	func_ptr = (void *)((void *)pSRAM + 1);
 	func_ptr();
 
 	printf("bye\n");
@@ -75,34 +75,35 @@ void BusFault_Handler(void)
 	while(1);
 }
 
-
-__attribute__((naked)) void UsageFault_Handler(uint32_t *ptr)
+__attribute__((naked)) void UsageFault_Handler(void)
 {
-	register uint32_t  msp_value __asm("r0");
-
 	__asm__("MRS R0, MSP");
+	__asm__("B __UsageFault_Handler");
+}
 
+void __UsageFault_Handler(uint32_t *msp_value)
+{
 	uint32_t * pMSP = (uint32_t *)msp_value;
 
 
-	printf("pMSP: %p\n", pMSP);
 	// print stack frame of previous context.
-	printf("addr: %p, R0: %08x\n",pMSP, *pMSP);
-	printf("addr: %p, R1: %08x\n",pMSP-1, *(pMSP - 1));
-	printf("addr: %p, R2: %08x\n",pMSP-2, *(pMSP - 2));
-	printf("addr: %p,R3: %08x\n",pMSP-3, *(pMSP - 3));
-	printf("addr: %p,R12: %08x\n",pMSP-4, *(pMSP - 4));
-	printf("addr: %p,LR: %08x\n",pMSP-5, *(pMSP - 5));
-	printf("addr: %p,PC: %08x\n",pMSP-6, *(pMSP - 6));
-	printf("addr: %p,XPSR: %08x\n",pMSP-7, *(pMSP - 7));
-/*
+	printf("pMSP: %p\n", pMSP);
+	printf("R0: %08x\n", pMSP[0]);
+	printf("R1: %08x\n", pMSP[1]);
+	printf("R2: %08x\n", pMSP[2]);
+	printf("R3: %08x\n", pMSP[3]);
+	printf("R12: %08x\n", pMSP[4]);
+	printf("LR: %08x\n", pMSP[5]);
+	printf("PC: %08x\n", pMSP[6]);
+	printf("XPSR: %08x\n", pMSP[7]);
+
 	uint32_t * pUFSR = (uint32_t *)SCB_UFSR_BASE;
 	uint32_t data = *pUFSR;
 	printf("Usage fault status: %08x\n", data);
 	printf("usage fault\n");
 	while(1);
-*/
 }
+
 
 void HardFault_Handler(void)
 {
