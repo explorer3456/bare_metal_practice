@@ -50,7 +50,8 @@ int main(void)
 	// 1. enable all configurable system exceptions.
 
 	pSHCSR = (uint32_t *)SCB_SHCSR_BASE;
-	*pSHCSR |= (1<<18)|(1<<17)|(1<<16); // enable Usage fault, Bus fault, Mem fault.
+	// *pSHCSR |= (1<<18)|(1<<17)|(1<<16); // enable Usage fault, Bus fault, Mem fault.
+	*pSHCSR |= (1<<17)|(1<<16); // enable Usage fault, Bus fault, Mem fault.
 
 	// 2. implement fault handlers
 
