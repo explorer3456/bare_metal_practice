@@ -25,6 +25,7 @@
 
 #define SCB_UFSR_BASE	(0xE000ED2A)
 #define SCB_MMSR_BASE	(0xE000ED28)
+#define SCB_MMAR_BASE	(0xE000ED34)
 #define SCB_CCR_BASE	(0xE000ED14)
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
@@ -65,13 +66,23 @@ int main(void)
 	func_ptr = (void *)((void *)pSRAM + 1);
 	func_ptr();
 */
+
+	// 4. divided by zero
+	/*
 	pSCB_CCR = (uint32_t *)SCB_CCR_BASE;
 	printf("default CCR: %08x\n", *pSCB_CCR);
 	*pSCB_CCR |= (0x1 << 4);
 	printf("disable div zero CCR: %08x\n", *pSCB_CCR);
-
+*/
 	// 3. divided by zero.
-	divide_function(10, 0);
+	//divide_function(10, 0);
+
+
+	// 5. try to execute address in peri address
+	pSRAM = (uint32_t *)PERI_BASE;
+	func_ptr = (void *)((void *)pSRAM + 1);
+	func_ptr();
+
 
 	printf("bye\n");
 	//data /= 0;
@@ -80,11 +91,41 @@ int main(void)
 	for(;;);
 }
 
-void MemManage_Handler(void)
-{
-	printf("Mem fault");
-	while(1);
 
+__attribute__((naked)) void MemManage_Handler(void)
+{
+	__asm__("MRS R0, MSP");
+	__asm__("PUSH {R4,R5,R6,R7,R8,R9,R10,R11,LR}");
+	__asm__("BL __MemManage_Handler");
+	__asm__("POP {R4,R5,R6,R7,R8,R9,R10,R11,LR}");
+	__asm__("BX LR");
+}
+
+void __MemManage_Handler(uint32_t *msp_value)
+{
+	uint32_t * pMSP = (uint32_t *)msp_value;
+
+	// print stack frame of previous context.
+	printf("pMSP: %p\n", pMSP);
+	printf("R0: %08x\n", pMSP[0]);
+	printf("R1: %08x\n", pMSP[1]);
+	printf("R2: %08x\n", pMSP[2]);
+	printf("R3: %08x\n", pMSP[3]);
+	printf("R12: %08x\n", pMSP[4]);
+	printf("LR: %08x\n", pMSP[5]);
+	printf("PC: %08x\n", pMSP[6]);
+	printf("XPSR: %08x\n", pMSP[7]);
+
+	uint32_t * pMMSR = (uint32_t *)SCB_MMSR_BASE;
+	uint32_t * pMMAR = (uint32_t *)SCB_MMAR_BASE;
+
+	uint32_t data = *pMMSR;
+	uint32_t addr = *pMMAR;
+
+	printf("MemManage fault status: %08x\n", data);
+	printf("MemManage address: %08x\n", addr);
+
+	printf("MemManage fault\n");
 }
 void BusFault_Handler(void)
 {
