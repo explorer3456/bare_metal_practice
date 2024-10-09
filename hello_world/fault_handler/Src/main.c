@@ -66,7 +66,7 @@ int main(void)
 */
 	pSCB_CCR = (uint32_t *)SCB_CCR_BASE;
 	printf("default CCR: %08x\n", *pSCB_CCR);
-	*pSCB_CCR &= ~(0x1 << 4);
+	*pSCB_CCR |= (0x1 << 4);
 	printf("disable div zero CCR: %08x\n", *pSCB_CCR);
 
 	// 3. divided by zero.
