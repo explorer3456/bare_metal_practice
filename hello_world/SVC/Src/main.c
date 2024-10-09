@@ -44,10 +44,10 @@ int main(void)
 __attribute__((naked)) void SVC_Handler(void)
 {
 	__asm__("MRS R0, MSP");
-	__asm__("PUSH {R0, R1, R2, R3, R4, R12, LR}");
-	__asm__("BL __SVC_Handler");
-	__asm__("POP {R0, R1, R2, R3, R4, R12, LR}");
-	__asm__("BX LR");
+	//__asm__("PUSH {R0, R1, R2, R3, R4, R12, LR}");
+	__asm__("B __SVC_Handler");
+	// __asm__("POP {R0, R1, R2, R3, R4, R12, LR}");
+	//__asm__("BX LR");
 }
 
 void __SVC_Handler(uint32_t *msp_number)
