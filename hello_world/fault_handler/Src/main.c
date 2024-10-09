@@ -25,15 +25,22 @@
 
 #define SCB_UFSR_BASE	(0xE000ED2A)
 #define SCB_MMSR_BASE	(0xE000ED28)
+#define SCB_CCR_BASE	(0xE000ED14)
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+int divide_function(int x, int y)
+{
+	return x/y;
+}
+
 int main(void)
 {
 	uint32_t *pSHCSR;
 	uint32_t *pSRAM;
+	uint32_t *pSCB_CCR;
 
 	printf("hello\n");
 
@@ -47,6 +54,7 @@ int main(void)
 
 	// 2. implement fault handlers
 
+	/*
 	// 3. force the processor to execute some undefeined instruction.
 	pSRAM = (uint32_t *)SRAM_BASE;
 	*pSRAM = 0xFFFF0000; // undefined instruction.
@@ -55,6 +63,14 @@ int main(void)
 
 	func_ptr = (void *)((void *)pSRAM + 1);
 	func_ptr();
+*/
+	pSCB_CCR = (uint32_t *)SCB_CCR_BASE;
+	printf("default CCR: %08x\n", *pSCB_CCR);
+	*pSCB_CCR &= ~(0x1 << 4);
+	printf("disable div zero CCR: %08x\n", *pSCB_CCR);
+
+	// 3. divided by zero.
+	divide_function(10, 0);
 
 	printf("bye\n");
 	//data /= 0;
