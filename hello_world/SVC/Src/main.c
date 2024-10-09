@@ -22,8 +22,52 @@
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+int call_svc(int svc_number)
+{
+	register int ret __asm("r1");
+
+	__asm__("SVC 0x5"); // there should be way to pass imm value from register..
+	__asm__("MOV %0, R1":"=r"(ret));
+
+	printf("SVC return: %d\n", ret);
+
+	return ret;
+}
+
 int main(void)
 {
     /* Loop forever */
+	call_svc(0x5);
 	for(;;);
 }
+
+__attribute__((naked)) void SVC_Handler(void)
+{
+	__asm__("MRS R0, MSP");
+	__asm__("PUSH {R0, R1, R2, R3, R4, R12, LR}");
+	__asm__("BL __SVC_Handler");
+	__asm__("POP {R0, R1, R2, R3, R4, R12, LR}");
+	__asm__("BX LR");
+}
+
+void __SVC_Handler(uint32_t *msp_number)
+{
+	uint32_t * pMSP = (uint32_t * )msp_number;
+	uint32_t * pINST;
+	uint32_t SVC_opcode;
+	uint32_t ret;
+
+	pINST = (uint32_t *)(pMSP[6] -2);
+	SVC_opcode = *pINST;
+
+	printf("PC: %08x\n", pMSP[6]);
+	printf("LR: %08x\n", pMSP[5]);
+	printf("SVC opcode: %08x\n", SVC_opcode);
+	printf("svc number: %ld\n", (SVC_opcode & 0xFF));
+
+	ret = (SVC_opcode & 0xFF) + 4;
+
+	pMSP[1] = ret; // manipulate user R1 to get return value.
+}
+
+
