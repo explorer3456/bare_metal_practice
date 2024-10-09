@@ -29,7 +29,7 @@
 
 int SVC_math(int x, int y, int op)
 {
-	register int ret __asm("r3");
+	int ret;
 
 	if (op == SVC_ADD) {
 		__asm__("SVC 36");
@@ -39,8 +39,9 @@ int SVC_math(int x, int y, int op)
 		__asm__("SVC 38");
 	} else if (op == SVC_DIV) {
 		__asm__("SVC 39");
-	} else
-		printf("ERROR. unkown SVC call\n");
+	}
+
+	__asm__ volatile("MOV %0, R0":"=r"(ret));
 
 	return ret;
 }
@@ -90,15 +91,15 @@ void __SVC_Handler(uint32_t *msp_number)
 	arg1 = (uint32_t)(pMSP[1]);
 
 	if (SVC_opcode == SVC_ADD) {
-		pMSP[3] = arg0 + arg1;
+		pMSP[0] = arg0 + arg1;
 	} else if (SVC_opcode == SVC_SUB) {
-		pMSP[3] = arg0 - arg1;
+		pMSP[0] = arg0 - arg1;
 	} else if (SVC_opcode == SVC_MULT) {
-		pMSP[3] = arg0 * arg1;
+		pMSP[0] = arg0 * arg1;
 	} else if (SVC_opcode == SVC_DIV) {
-		pMSP[3] = arg0 / arg1;
+		pMSP[0] = arg0 / arg1;
 	} else {
-		pMSP[3] = -1;
+		pMSP[0] = -1;
 	}
 }
 
