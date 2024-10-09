@@ -18,26 +18,50 @@
 
 #include <stdint.h>
 
+#define SVC_ADD		(36)
+#define SVC_SUB		(37)
+#define SVC_MULT	(38)
+#define SVC_DIV		(39)
+
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
-int call_svc(int svc_number)
+int SVC_math(int x, int y, int op)
 {
-	register int ret __asm("r1");
+	register int ret __asm("r3");
 
-	__asm__("SVC 0x5"); // there should be way to pass imm value from register..
-	__asm__("MOV %0, R1":"=r"(ret));
-
-	printf("SVC return: %d\n", ret);
+	if (op == SVC_ADD) {
+		__asm__("SVC 36");
+	} else if (op == SVC_SUB) {
+		__asm__("SVC 37");
+	} else if (op == SVC_MULT) {
+		__asm__("SVC 38");
+	} else if (op == SVC_DIV) {
+		__asm__("SVC 39");
+	} else
+		printf("ERROR. unkown SVC call\n");
 
 	return ret;
 }
 
 int main(void)
 {
+	int ret;
     /* Loop forever */
-	call_svc(0x5);
+
+	ret = SVC_math(2, 3, SVC_ADD);
+	printf("add: %d\n", ret);
+
+	ret = SVC_math(10, 7, SVC_SUB);
+	printf("sub: %d\n", ret);
+
+	ret = SVC_math(16, 2, SVC_MULT);
+	printf("mult: %d\n", ret);
+
+	ret = SVC_math(50, 10, SVC_DIV);
+	printf("div: %d\n", ret);
+
 	for(;;);
 }
 
@@ -56,18 +80,26 @@ void __SVC_Handler(uint32_t *msp_number)
 	uint32_t * pINST;
 	uint32_t SVC_opcode;
 	uint32_t ret;
+	uint32_t arg0;
+	uint32_t arg1;
 
 	pINST = (uint32_t *)(pMSP[6] -2);
-	SVC_opcode = *pINST;
+	SVC_opcode = (*pINST & 0xFF);
 
-	printf("PC: %08x\n", pMSP[6]);
-	printf("LR: %08x\n", pMSP[5]);
-	printf("SVC opcode: %08x\n", SVC_opcode);
-	printf("svc number: %ld\n", (SVC_opcode & 0xFF));
+	arg0 = (uint32_t)(pMSP[0]);
+	arg1 = (uint32_t)(pMSP[1]);
 
-	ret = (SVC_opcode & 0xFF) + 4;
-
-	pMSP[1] = ret; // manipulate user R1 to get return value.
+	if (SVC_opcode == SVC_ADD) {
+		pMSP[3] = arg0 + arg1;
+	} else if (SVC_opcode == SVC_SUB) {
+		pMSP[3] = arg0 - arg1;
+	} else if (SVC_opcode == SVC_MULT) {
+		pMSP[3] = arg0 * arg1;
+	} else if (SVC_opcode == SVC_DIV) {
+		pMSP[3] = arg0 / arg1;
+	} else {
+		pMSP[3] = -1;
+	}
 }
 
 
