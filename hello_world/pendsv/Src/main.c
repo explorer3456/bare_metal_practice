@@ -60,9 +60,19 @@ void task4_handler(void);
 #define SCHED_STACK_START	(T4_STACK_END)
 #define SCHED_STACK_END	(SCHED_STACK_START - SCHED_STACK_SIZE)
 
+
+// systick timer
+#define SYSTICK_HZ	(16000000)
+#define TICK_HZ	(1U) // 1KHZ
+#define SYST_CSR_BASE	(0xE000E010)
+#define SYST_RVR_BASE	(0xE000E014)
+
+
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
+
+void init_systick_timer(uint32_t tick_hz);
 
 int main(void)
 {
@@ -70,9 +80,32 @@ int main(void)
 
 	printf("hello\n");
 
+	init_systick_timer( TICK_HZ );
+
 	printf("bye\n");
     /* Loop forever */
 	for(;;);
+}
+
+void init_systick_timer(uint32_t tick_hz)
+{
+	uint32_t * pSYST_CSR_BASE;
+	uint32_t * pSYST_RVR_BASE;
+
+	pSYST_CSR_BASE = (uint32_t *)SYST_CSR_BASE;
+	*pSYST_CSR_BASE |= (1<<2)|(1<<1); // enable clock source to processor clock, and exception.
+
+	pSYST_RVR_BASE = (uint32_t *)SYST_RVR_BASE;
+	*pSYST_RVR_BASE = (SYSTICK_HZ / tick_hz) - 1;
+
+	*pSYST_CSR_BASE |= (1<<0); // enable systick timer.
+
+}
+
+
+void SysTick_Handler(void)
+{
+	printf("systick handler\n");
 }
 
 void task1_handler(void)
