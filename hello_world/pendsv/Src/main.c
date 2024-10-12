@@ -17,6 +17,48 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
+
+void task1_handler(void);
+void task2_handler(void);
+void task3_handler(void);
+void task4_handler(void);
+
+
+#define TASK_STACK_SIZE	(1024U)
+#define SCHED_STACK_SIZE	(1024U)
+
+#define SRAM_BASE	(0x20000000U)
+#define SRAM_SIZE	(128U * 1024U)
+#define SRAM_END	(SRAM_BASE + SRAM_SIZE)
+
+// normal memory map is defined with base and size.
+// but stack memory is full descending.
+// lets try with original concept, base and size.
+
+// but look below,, it is confusing.
+// #define T1_STACK_SIZE	TASK_STACK_SIZE
+// #define T1_STACK_BASE	((SRAM_BASE + SRAM_SIZE) - T1_STACK_SIZE)
+
+// below syntax looks much nicer.
+#define T1_STACK_START	(SRAM_END)
+#define T1_STACK_SIZE	(TASK_STACK_SIZE)
+#define T1_STACK_END	(T1_STACK_START - T1_STACK_SIZE)
+
+#define T2_STACK_START	(T1_STACK_END)
+#define T2_STACK_SIZE	(TASK_STACK_SIZE)
+#define T2_STACK_END	(T2_STACK_START - T2_STACK_SIZE)
+
+#define T3_STACK_START	(T2_STACK_END)
+#define T3_STACK_SIZE	(TASK_STACK_SIZE)
+#define T3_STACK_END	(T3_STACK_START - T3_STACK_SIZE)
+
+#define T4_STACK_START	(T3_STACK_END)
+#define T4_STACK_SIZE	(TASK_STACK_SIZE)
+#define T4_STACK_END	(T4_STACK_START - T4_STACK_SIZE)
+
+#define SCHED_STACK_START	(T4_STACK_END)
+#define SCHED_STACK_END	(SCHED_STACK_START - SCHED_STACK_SIZE)
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -24,6 +66,38 @@
 
 int main(void)
 {
+	int i;
+
+	printf("hello\n");
+
+	printf("bye\n");
     /* Loop forever */
 	for(;;);
 }
+
+void task1_handler(void)
+{
+	printf("task1");
+	while(1);
+}
+
+void task2_handler(void)
+{
+	printf("task2");
+	while(1);
+}
+
+void task3_handler(void)
+{
+	printf("task3");
+	while(1);
+}
+
+void task4_handler(void)
+{
+	printf("task4");
+	while(1);
+}
+
+
+
