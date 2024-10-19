@@ -71,6 +71,7 @@ uint32_t *task1_stack;
 uint32_t *task2_stack;
 uint32_t *task3_stack;
 uint32_t *task4_stack;
+int task_count = 0;
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -93,7 +94,7 @@ void init_task_stack(uint32_t **pstack, uint32_t stack_start, uint32_t init_stac
 	int i;
 	uint32_t * stack_pointer;
 
-	*pstack = stack_start - init_stack_size ; // stack pointer is updated to end of stack.
+	*pstack = (uint32_t *)(stack_start - init_stack_size); // stack pointer is updated to end of stack.
 
 	stack_pointer = *pstack;
 
@@ -101,10 +102,9 @@ void init_task_stack(uint32_t **pstack, uint32_t stack_start, uint32_t init_stac
 
 	// clear all stack contents.
 	for(i=0; i<init_stack_size/sizeof(int); i++) {
-		*(stack_pointer++) = 0;
+		stack_pointer[i] = 0;
 	}
 
-	stack_pointer = *pstack;
 	stack_pointer[15] = 0x1000000; // XPSR T bit is set to high.
 	stack_pointer[14] = (uint32_t)((void *)task_addr + 0x1); // set LSB one.
 	stack_pointer[13] = 0xFFFFFFFD; // return to thread mode with PSP.
@@ -115,13 +115,7 @@ int main(void)
 {
 	init_scheduler_stack(SCHED_STACK_START);
 
-	printf("task1 stack before %p: \n", task1_stack);
-
 	init_task_stack(&task1_stack, T1_STACK_START, 16 * sizeof(int), task1_handler);
-
-	printf("task1 stack after %p: \n", task1_stack);
-
-
 	init_task_stack(&task2_stack, T2_STACK_START, 16 * sizeof(int), task2_handler);
 	init_task_stack(&task3_stack, T3_STACK_START, 16 * sizeof(int), task3_handler);
 	init_task_stack(&task4_stack, T4_STACK_START, 16 * sizeof(int), task4_handler);
@@ -152,6 +146,16 @@ void init_systick_timer(uint32_t tick_hz)
 void SysTick_Handler(void)
 {
 	printf("systick handler\n");
+
+	if ((task_count % 4) == 0) {
+		__asm__("MSR PSP, %0"::"r"(task1_stack));
+	} else if ((task_count % 4) == 1) {
+		__asm__("MSR PSP, %0"::"r"(task2_stack));
+	} else if ((task_count % 4) == 2) {
+		__asm__("MSR PSP, %0"::"r"(task3_stack));
+	} else if ((task_count % 4) == 3) {
+		__asm__("MSR PSP, %0"::"r"(task4_stack));
+	}
 }
 
 void task1_handler(void)
