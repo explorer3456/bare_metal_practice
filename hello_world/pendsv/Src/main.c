@@ -74,9 +74,16 @@ void task4_handler(void);
 
 void init_systick_timer(uint32_t tick_hz);
 
+__attribute__((naked)) void init_scheduler_stack(uint32_t stack_start)
+{
+	__asm__("MSR MSP, R0");
+	__asm__("BX LR");
+}
+
+
 int main(void)
 {
-	int i;
+	init_scheduler_stack(SCHED_STACK_START);
 
 	printf("hello\n");
 
@@ -101,6 +108,7 @@ void init_systick_timer(uint32_t tick_hz)
 	*pSYST_CSR_BASE |= (1<<0); // enable systick timer.
 
 }
+
 
 
 void SysTick_Handler(void)
