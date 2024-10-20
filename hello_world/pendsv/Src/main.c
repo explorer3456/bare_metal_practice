@@ -68,6 +68,14 @@ void task4_handler(void);
 #define SYST_CSR_BASE	(0xE000E010)
 #define SYST_RVR_BASE	(0xE000E014)
 
+
+#define SCB_SHCSR_BASE	(0xE000ED24)
+
+#define SCB_UFSR_BASE	(0xE000ED2A)
+#define SCB_MMSR_BASE	(0xE000ED28)
+#define SCB_MMAR_BASE	(0xE000ED34)
+#define SCB_CCR_BASE	(0xE000ED14)
+
 uint32_t * task_stack[MAX_TASK];
 
 int task_count = 0;
@@ -132,6 +140,12 @@ void init_task_stack(uint32_t **pstack, uint32_t stack_start, uint32_t init_stac
 
 int main(void)
 {
+	uint32_t *pSHCSR;
+
+	pSHCSR = (uint32_t *)SCB_SHCSR_BASE;
+	// *pSHCSR |= (1<<18)|(1<<17)|(1<<16); // enable Usage fault, Bus fault, Mem fault.
+	*pSHCSR |= (1<<17)|(1<<16); // enable Usage fault, Bus fault, Mem fault.
+
 	init_scheduler_stack(SCHED_STACK_START);
 
 	init_task_stack(&task_stack[0], T1_STACK_START, 16 * sizeof(int), task1_handler);
@@ -167,6 +181,7 @@ void init_systick_timer(uint32_t tick_hz)
 
 void SysTick_Handler(void)
 {
+
 	int i;
 	// 1. save current task context.
 	__asm__("MRS R0, PSP");
@@ -180,39 +195,138 @@ void SysTick_Handler(void)
 	task_count = task_count % MAX_TASK;
 
 	// 2. restore next task context.
-	__asm__("MSR PSP, %0\n"
-			"LDMIA %0!, {R4, R5, R6, R7, R8, R9, R10, R11}\n"
+	__asm__("LDMIA %0!, {R4, R5, R6, R7, R8, R9, R10, R11}\n"
+			"MSR PSP, %0\n"
 			::"r"((uint32_t)task_stack[task_count]));
 
-	// printf("systick handler\n");
 
 	i = 5;
-
 }
 
 void task1_handler(void)
 {
-	printf("task1");
-	while(1);
+	int i;
+	while(1) {
+		if ((i % 100) == 0) {
+			printf("task1\n");
+			i = 0;
+		}
+
+		i++;
+	}
 }
 
 void task2_handler(void)
 {
-	printf("task2");
-	while(1);
+	int i;
+	while(1) {
+		if ((i % 100) == 0) {
+			printf("task2\n");
+			i = 0;
+		}
+		i++;
+	}
 }
 
 void task3_handler(void)
 {
-	printf("task3");
-	while(1);
+	int i;
+	while(1) {
+		if ((i % 100) == 0) {
+			printf("task3\n");
+			i = 0;
+		}
+		i++;
+	}
 }
 
 void task4_handler(void)
 {
-	printf("task4");
+	int i;
+	while(1) {
+		if ((i % 100) == 0) {
+			printf("task4\n");
+			i = 0;
+		}
+		i++;
+	}
+}
+
+__attribute__((naked)) void MemManage_Handler(void)
+{
+	__asm__("MRS R0, MSP");
+	__asm__("PUSH {R4,R5,R6,R7,R8,R9,R10,R11,LR}");
+	__asm__("BL __MemManage_Handler");
+	__asm__("POP {R4,R5,R6,R7,R8,R9,R10,R11,LR}");
+	__asm__("BX LR");
+}
+
+void __MemManage_Handler(uint32_t *msp_value)
+{
+	uint32_t * pMSP = (uint32_t *)msp_value;
+
+	// print stack frame of previous context.
+	printf("pMSP: %p\n", pMSP);
+	printf("R0: %08x\n", pMSP[0]);
+	printf("R1: %08x\n", pMSP[1]);
+	printf("R2: %08x\n", pMSP[2]);
+	printf("R3: %08x\n", pMSP[3]);
+	printf("R12: %08x\n", pMSP[4]);
+	printf("LR: %08x\n", pMSP[5]);
+	printf("PC: %08x\n", pMSP[6]);
+	printf("XPSR: %08x\n", pMSP[7]);
+
+	uint32_t * pMMSR = (uint32_t *)SCB_MMSR_BASE;
+	uint32_t * pMMAR = (uint32_t *)SCB_MMAR_BASE;
+
+	uint32_t data = *pMMSR;
+	uint32_t addr = *pMMAR;
+
+	printf("MemManage fault status: %08x\n", data);
+	printf("MemManage address: %08x\n", addr);
+
+	printf("MemManage fault\n");
+}
+void BusFault_Handler(void)
+{
+	printf("Bus fault");
 	while(1);
 }
 
+__attribute__((naked)) void UsageFault_Handler(void)
+{
+	__asm__("MRS R0, MSP");
+	__asm__("B __UsageFault_Handler");
+}
+
+void __UsageFault_Handler(uint32_t *msp_value)
+{
+	uint32_t * pMSP = (uint32_t *)msp_value;
+
+
+	// print stack frame of previous context.
+	printf("pMSP: %p\n", pMSP);
+	printf("R0: %08x\n", pMSP[0]);
+	printf("R1: %08x\n", pMSP[1]);
+	printf("R2: %08x\n", pMSP[2]);
+	printf("R3: %08x\n", pMSP[3]);
+	printf("R12: %08x\n", pMSP[4]);
+	printf("LR: %08x\n", pMSP[5]);
+	printf("PC: %08x\n", pMSP[6]);
+	printf("XPSR: %08x\n", pMSP[7]);
+
+	uint32_t * pUFSR = (uint32_t *)SCB_UFSR_BASE;
+	uint32_t data = *pUFSR;
+	printf("Usage fault status: %08x\n", data);
+	printf("usage fault\n");
+	while(1);
+}
+
+
+void HardFault_Handler(void)
+{
+	printf("Hard fault");
+	while(1);
+}
 
 
