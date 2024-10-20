@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <led.h>
 
 void task1_handler(void);
 void task2_handler(void);
@@ -166,6 +167,8 @@ int main(void)
 	init_task_stack(&task_stack[2], T3_STACK_START, 16 * sizeof(int), task3_handler);
 	init_task_stack(&task_stack[3], T4_STACK_START, 16 * sizeof(int), task4_handler);
 
+	led_init_all();
+
 	change_sp_to_psp();
 
 	// from now, below code is running as task1 context.
@@ -220,50 +223,41 @@ __attribute__((naked)) void SysTick_Handler(void)
 
 void task1_handler(void)
 {
-	int i;
 	while(1) {
-		if ((i % 100) == 0) {
-			printf("task1\n");
-			i = 0;
-		}
-
-		i++;
+		led_on(LED_GREEN);
+		delay(DELAY_COUNT_1S );
+		led_off(LED_GREEN);
+		delay(DELAY_COUNT_1S );
 	}
 }
 
 void task2_handler(void)
 {
-	int i;
 	while(1) {
-		if ((i % 100) == 0) {
-			printf("task2\n");
-			i = 0;
-		}
-		i++;
+		led_on(LED_ORANGE);
+		delay(DELAY_COUNT_1S );
+		led_off(LED_ORANGE);
+		delay(DELAY_COUNT_1S );
 	}
 }
 
 void task3_handler(void)
 {
-	int i;
 	while(1) {
-		if ((i % 100) == 0) {
-			printf("task3\n");
-			i = 0;
-		}
-		i++;
+		led_on(LED_RED);
+		delay(DELAY_COUNT_1S );
+		led_off(LED_RED);
+		delay(DELAY_COUNT_1S );
 	}
 }
 
 void task4_handler(void)
 {
-	int i;
 	while(1) {
-		if ((i % 100) == 0) {
-			printf("task4\n");
-			i = 0;
-		}
-		i++;
+		led_on(LED_BLUE);
+		delay(DELAY_COUNT_1S );
+		led_off(LED_BLUE);
+		delay(DELAY_COUNT_1S );
 	}
 }
 
