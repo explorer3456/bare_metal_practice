@@ -60,6 +60,7 @@ void task4_handler(void);
 #define SCHED_STACK_START	(T4_STACK_END)
 #define SCHED_STACK_END	(SCHED_STACK_START - SCHED_STACK_SIZE)
 
+#define MAX_TASK	4
 
 // systick timer
 #define SYSTICK_HZ	(16000000)
@@ -67,10 +68,8 @@ void task4_handler(void);
 #define SYST_CSR_BASE	(0xE000E010)
 #define SYST_RVR_BASE	(0xE000E014)
 
-uint32_t *task1_stack;
-uint32_t *task2_stack;
-uint32_t *task3_stack;
-uint32_t *task4_stack;
+uint32_t * task_stack[MAX_TASK];
+
 int task_count = 0;
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
@@ -86,6 +85,26 @@ void task4_handler(void);
 __attribute__((naked)) void init_scheduler_stack(uint32_t stack_start)
 {
 	__asm__("MSR MSP, R0");
+	__asm__("BX LR");
+}
+
+uint32_t * get_current_stack(void)
+{
+	return task_stack[task_count];
+}
+
+// before start task, change stack pointer to PSP.
+__attribute__((naked)) void change_sp_to_psp(void)
+{
+	__asm__("PUSH {LR}");
+	__asm__("BL get_current_stack");
+	__asm__("POP {LR}");
+
+	__asm__("MSR PSP, R0");
+	__asm__("MRS R0, CONTROL");
+	__asm__("ORR R0, R0, 0x2");
+	__asm__("MSR CONTROL, R0");
+
 	__asm__("BX LR");
 }
 
@@ -115,11 +134,14 @@ int main(void)
 {
 	init_scheduler_stack(SCHED_STACK_START);
 
-	init_task_stack(&task1_stack, T1_STACK_START, 16 * sizeof(int), task1_handler);
-	init_task_stack(&task2_stack, T2_STACK_START, 16 * sizeof(int), task2_handler);
-	init_task_stack(&task3_stack, T3_STACK_START, 16 * sizeof(int), task3_handler);
-	init_task_stack(&task4_stack, T4_STACK_START, 16 * sizeof(int), task4_handler);
+	init_task_stack(&task_stack[0], T1_STACK_START, 16 * sizeof(int), task1_handler);
+	init_task_stack(&task_stack[1], T2_STACK_START, 16 * sizeof(int), task2_handler);
+	init_task_stack(&task_stack[2], T3_STACK_START, 16 * sizeof(int), task3_handler);
+	init_task_stack(&task_stack[3], T4_STACK_START, 16 * sizeof(int), task4_handler);
 
+	change_sp_to_psp();
+
+	// from now, below code is running as task1 context.
 	init_systick_timer( TICK_HZ );
 
     /* Loop forever */
@@ -145,17 +167,27 @@ void init_systick_timer(uint32_t tick_hz)
 
 void SysTick_Handler(void)
 {
-	printf("systick handler\n");
+	int i;
+	// 1. save current task context.
+	__asm__("MRS R0, PSP");
+	__asm__("STMDB R0!, {R4, R5, R6, R7, R8, R9, R10, R11}");
 
-	if ((task_count % 4) == 0) {
-		__asm__("MSR PSP, %0"::"r"(task1_stack));
-	} else if ((task_count % 4) == 1) {
-		__asm__("MSR PSP, %0"::"r"(task2_stack));
-	} else if ((task_count % 4) == 2) {
-		__asm__("MSR PSP, %0"::"r"(task3_stack));
-	} else if ((task_count % 4) == 3) {
-		__asm__("MSR PSP, %0"::"r"(task4_stack));
-	}
+	// update stack for current task.
+	__asm__("MOV %0, R0":"=r"((uint32_t)task_stack[task_count]));
+
+	// decide next task to run
+	task_count += 1;
+	task_count = task_count % MAX_TASK;
+
+	// 2. restore next task context.
+	__asm__("MSR PSP, %0\n"
+			"LDMIA %0!, {R4, R5, R6, R7, R8, R9, R10, R11}\n"
+			::"r"((uint32_t)task_stack[task_count]));
+
+	// printf("systick handler\n");
+
+	i = 5;
+
 }
 
 void task1_handler(void)
