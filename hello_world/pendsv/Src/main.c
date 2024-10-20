@@ -171,6 +171,8 @@ int main(void)
 	// from now, below code is running as task1 context.
 	init_systick_timer( TICK_HZ );
 
+	task1_handler();
+
     /* Loop forever */
 	for(;;);
 }
