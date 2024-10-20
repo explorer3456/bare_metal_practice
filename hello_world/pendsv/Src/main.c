@@ -98,7 +98,20 @@ __attribute__((naked)) void init_scheduler_stack(uint32_t stack_start)
 
 uint32_t * get_current_stack(void)
 {
+	//printf("get current stack idx: %d\n", task_count);
 	return task_stack[task_count];
+}
+
+void update_current_stack(uint32_t current_stack)
+{
+	task_stack[task_count] = current_stack;
+	//printf("update current stack idx: %d\n", task_count);
+}
+
+void update_task_count(void)
+{
+	task_count = (task_count + 1) % MAX_TASK;
+	//printf("update task count: %d\n", task_count);
 }
 
 // before start task, change stack pointer to PSP.
@@ -177,30 +190,30 @@ void init_systick_timer(uint32_t tick_hz)
 
 }
 
-
-
-void SysTick_Handler(void)
+__attribute__((naked)) void SysTick_Handler(void)
 {
 
-	int i;
+	__asm__("PUSH {LR}");
 	// 1. save current task context.
 	__asm__("MRS R0, PSP");
 	__asm__("STMDB R0!, {R4, R5, R6, R7, R8, R9, R10, R11}");
 
 	// update stack for current task.
-	__asm__("MOV %0, R0":"=r"((uint32_t)task_stack[task_count]));
+	// __asm__("MOV %0, R0":"=r"((uint32_t)task_stack[task_count]));
 
-	// decide next task to run
-	task_count += 1;
-	task_count = task_count % MAX_TASK;
+	__asm__("BL update_current_stack");
+	__asm__("BL update_task_count");
+	__asm__("BL get_current_stack");
 
 	// 2. restore next task context.
-	__asm__("LDMIA %0!, {R4, R5, R6, R7, R8, R9, R10, R11}\n"
-			"MSR PSP, %0\n"
-			::"r"((uint32_t)task_stack[task_count]));
+	__asm__("LDMIA R0!, {R4, R5, R6, R7, R8, R9, R10, R11}");
+	__asm__("MSR PSP, R0");
 
-
-	i = 5;
+	// __asm__("PUSH {R0-R3,R12,LR}");
+	// printf("systick handler");
+	// __asm__("POP {R0-R3,R12,LR}");
+	__asm__("POP {LR}");
+	__asm__("BX LR");
 }
 
 void task1_handler(void)
