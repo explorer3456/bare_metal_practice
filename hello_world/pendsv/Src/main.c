@@ -63,9 +63,11 @@ void task4_handler(void);
 
 #define MAX_TASK	4
 
+#define DUMMY_STACK_FRAME_SIZE	(16 * sizeof(int))
+
 // systick timer
 #define SYSTICK_HZ	(16000000)
-#define TICK_HZ	(1U) // 1KHZ
+#define TICK_HZ	(1000U) // 1KHZ
 #define SYST_CSR_BASE	(0xE000E010)
 #define SYST_RVR_BASE	(0xE000E014)
 
@@ -77,19 +79,56 @@ void task4_handler(void);
 #define SCB_MMAR_BASE	(0xE000ED34)
 #define SCB_CCR_BASE	(0xE000ED14)
 
-uint32_t * task_stack[MAX_TASK];
+// uint32_t * task_stack[MAX_TASK];
 
-int task_count = 0;
-
-#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-#endif
+#define TASK_STATE_BLOCK	1
+#define TASK_STATE_RUNNING	0
 
 void init_systick_timer(uint32_t tick_hz);
 void task1_handler(void);
 void task2_handler(void);
 void task3_handler(void);
 void task4_handler(void);
+
+struct task_struct {
+	int state;
+	uint32_t * stack;
+	void (*handler)(void);
+};
+
+int task_count = 0;
+
+struct task_struct task_info[MAX_TASK] =
+{
+		{
+				.state = TASK_STATE_RUNNING,
+				.stack = T1_STACK_START,
+				.handler = task1_handler,
+		},
+		{
+				.state = TASK_STATE_RUNNING,
+				.stack = T2_STACK_START,
+				.handler = task2_handler,
+		},
+		{
+				.state = TASK_STATE_RUNNING,
+				.stack = T3_STACK_START,
+				.handler = task3_handler,
+		},
+		{
+				.state = TASK_STATE_RUNNING,
+				.stack = T4_STACK_START,
+				.handler = task4_handler,
+		}
+};
+
+
+
+#if !defined(__SOFT_FP__) && defined(__ARM_FP)
+  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
+#endif
+
+
 
 __attribute__((naked)) void init_scheduler_stack(uint32_t stack_start)
 {
@@ -100,12 +139,14 @@ __attribute__((naked)) void init_scheduler_stack(uint32_t stack_start)
 uint32_t * get_current_stack(void)
 {
 	//printf("get current stack idx: %d\n", task_count);
-	return task_stack[task_count];
+	// return task_stack[task_count];
+	return task_info[task_count].stack;
 }
 
 void update_current_stack(uint32_t current_stack)
 {
-	task_stack[task_count] = current_stack;
+	task_info[task_count].stack = current_stack;
+	// task_stack[task_count] = current_stack;
 	//printf("update current stack idx: %d\n", task_count);
 }
 
@@ -130,6 +171,7 @@ __attribute__((naked)) void change_sp_to_psp(void)
 	__asm__("BX LR");
 }
 
+/*
 void init_task_stack(uint32_t **pstack, uint32_t stack_start, uint32_t init_stack_size, void *task_addr)
 {
 	int i;
@@ -150,11 +192,29 @@ void init_task_stack(uint32_t **pstack, uint32_t stack_start, uint32_t init_stac
 	stack_pointer[14] = (uint32_t)((void *)task_addr + 0x1); // set LSB one.
 	stack_pointer[13] = 0xFFFFFFFD; // return to thread mode with PSP.
 
+}*/
+
+void init_task_stack(struct task_struct * task)
+{
+	int i;
+
+	// full descending stack. initialize full deschending stack.
+	for (i=0; i<DUMMY_STACK_FRAME_SIZE/sizeof(int); i++) {
+		if (i==0) {
+			*(--task->stack) = 0x1000000; // XPSR T bit is set to high.
+		} else if (i==1) {
+			*(--task->stack) = (uint32_t)((void *)task->handler + 1); // default PC initialize. first function
+		} else if (i==2) {
+			*(--task->stack) = 0xFFFFFFFD; // default LR initialize. return to thread mode using PSP.
+		} else
+			*(--task->stack) = 0x0; // otherwise, intialize with zero.
+	}
 }
 
 int main(void)
 {
 	uint32_t *pSHCSR;
+	int i;
 
 	pSHCSR = (uint32_t *)SCB_SHCSR_BASE;
 	// *pSHCSR |= (1<<18)|(1<<17)|(1<<16); // enable Usage fault, Bus fault, Mem fault.
@@ -162,10 +222,14 @@ int main(void)
 
 	init_scheduler_stack(SCHED_STACK_START);
 
-	init_task_stack(&task_stack[0], T1_STACK_START, 16 * sizeof(int), task1_handler);
-	init_task_stack(&task_stack[1], T2_STACK_START, 16 * sizeof(int), task2_handler);
-	init_task_stack(&task_stack[2], T3_STACK_START, 16 * sizeof(int), task3_handler);
-	init_task_stack(&task_stack[3], T4_STACK_START, 16 * sizeof(int), task4_handler);
+	for (i=0; i<MAX_TASK; i++) {
+		init_task_stack(&task_info[i]);
+	}
+
+	//init_task_stack(&task_stack[0], T1_STACK_START, 16 * sizeof(int), task1_handler);
+	//init_task_stack(&task_stack[1], T2_STACK_START, 16 * sizeof(int), task2_handler);
+	//init_task_stack(&task_stack[2], T3_STACK_START, 16 * sizeof(int), task3_handler);
+	//init_task_stack(&task_stack[3], T4_STACK_START, 16 * sizeof(int), task4_handler);
 
 	led_init_all();
 
@@ -224,6 +288,7 @@ __attribute__((naked)) void SysTick_Handler(void)
 void task1_handler(void)
 {
 	while(1) {
+		//printf("%s\n", __func__);
 		led_on(LED_GREEN);
 		delay(DELAY_COUNT_1S );
 		led_off(LED_GREEN);
@@ -234,6 +299,7 @@ void task1_handler(void)
 void task2_handler(void)
 {
 	while(1) {
+		//printf("%s\n", __func__);
 		led_on(LED_ORANGE);
 		delay(DELAY_COUNT_1S );
 		led_off(LED_ORANGE);
@@ -244,6 +310,7 @@ void task2_handler(void)
 void task3_handler(void)
 {
 	while(1) {
+		//printf("%s\n", __func__);
 		led_on(LED_RED);
 		delay(DELAY_COUNT_1S );
 		led_off(LED_RED);
@@ -254,6 +321,7 @@ void task3_handler(void)
 void task4_handler(void)
 {
 	while(1) {
+		//printf("%s\n", __func__);
 		led_on(LED_BLUE);
 		delay(DELAY_COUNT_1S );
 		led_off(LED_BLUE);
