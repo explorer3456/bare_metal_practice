@@ -199,19 +199,6 @@ void update_task_count(void)
 	}
 }
 
-void task_delay(uint32_t time_ms, int task_idx)
-{
-	uint32_t count;
-
-	count = ( time_ms * TICK_HZ )/1000;
-
-	if (task_info[task_idx].state != TASK_STATE_BLOCK) {
-		task_info[task_idx].block_count_value = count;
-		task_info[task_idx].state = TASK_STATE_BLOCK;
-	}
-}
-
-
 void systick_update_task_state(void)
 {
 	int i;
@@ -246,6 +233,50 @@ struct task_info * systick_get_next_task(void)
 	}
 
 	return task;
+}
+
+struct task_info * get_next_task(void)
+{
+	int i;
+	struct task_info * task;
+
+	for(i=0; i<MAX_TASK; i++) {
+
+		task_count = (task_count + 1) % MAX_TASK;
+
+		if (task_info[task_count].state == TASK_STATE_RUNNING) {
+			task = &task_info[task_count];
+			break;
+		}
+	}
+
+	return task;
+}
+
+void schedule(void)
+{
+	uint32_t * pICSR = (uint32_t *)SCB_ICSR_BASE;
+
+	cur_task = &task_info[task_count];
+	next_task = get_next_task();
+
+	if (cur_task != next_task) {
+		// call enable pend SV handler.
+		*pICSR |= (0x1<<28); // set pend SV exception pending.
+	}
+}
+
+void task_delay(uint32_t time_ms, int task_idx)
+{
+	uint32_t count;
+
+	count = ( time_ms * TICK_HZ )/1000;
+
+	if (task_info[task_idx].state != TASK_STATE_BLOCK) {
+		task_info[task_idx].block_count_value = count;
+		task_info[task_idx].state = TASK_STATE_BLOCK;
+	}
+	schedule();
 }
 
 // before start task, change stack pointer to PSP.
@@ -391,9 +422,9 @@ void task3_handler(void)
 	while(1) {
 		//printf("%s\n", __func__);
 		led_on(LED_RED);
-		task_delay(1000, 2);
+		task_delay(100, 2);
 		led_off(LED_RED);
-		task_delay(1000, 2);
+		task_delay(100, 2);
 	}
 }
 
@@ -402,9 +433,9 @@ void task4_handler(void)
 	while(1) {
 		//printf("%s\n", __func__);
 		led_on(LED_BLUE);
-		task_delay(1000, 3);
+		task_delay(500, 3);
 		led_off(LED_BLUE);
-		task_delay(1000, 3);
+		task_delay(500, 3);
 	}
 }
 
