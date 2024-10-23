@@ -156,7 +156,12 @@ struct task_struct task_info[MAX_TASK] =
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
-
+// note that you can implement multiple lines C macro using do while trick.
+#define INTERRUPT_ENABLE() do{ \
+__asm__("MRS R0, PRIMASK"); \
+__asm__("ORR, R0, R0, 0x1"); \
+__asm__("MSR PRIMASK, R0"); \
+}while(0)
 
 __attribute__((naked)) void init_scheduler_stack(uint32_t stack_start)
 {
