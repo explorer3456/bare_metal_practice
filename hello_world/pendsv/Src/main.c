@@ -79,11 +79,11 @@ void task4_handler(void);
 
 
 #define SCB_SHCSR_BASE	(0xE000ED24)
-
 #define SCB_UFSR_BASE	(0xE000ED2A)
 #define SCB_MMSR_BASE	(0xE000ED28)
 #define SCB_MMAR_BASE	(0xE000ED34)
 #define SCB_CCR_BASE	(0xE000ED14)
+#define SCB_ICSR_BASE	(0xE000ED04)
 
 // uint32_t * task_stack[MAX_TASK];
 
@@ -108,6 +108,9 @@ struct task_struct {
 int task_count = 0;
 struct task_struct * current_task;
 uint32_t g_counter = 0;
+
+struct task_struct * next_task;
+struct task_struct * cur_task;
 
 struct task_struct task_info[MAX_TASK] =
 {
@@ -174,6 +177,16 @@ void update_current_stack(uint32_t current_stack)
 	task_info[task_count].stack = (uint32_t * )current_stack;
 }
 
+void pendsv_update_stack_pointer(uint32_t current_stack)
+{
+	cur_task->stack = (uint32_t * )current_stack;
+}
+
+uint32_t * pendsv_next_task_stack_pointer(void)
+{
+	return next_task->stack;
+}
+
 void update_task_count(void)
 {
 	int i;
@@ -199,11 +212,9 @@ void task_delay(uint32_t time_ms, int task_idx)
 }
 
 
-void update_global_counter(void)
+void systick_update_task_state(void)
 {
 	int i;
-
-	g_counter = (g_counter + 1) % 0xFFFFFFFF;
 
 	for(i=0; i<MAX_TASK; i++) {
 		if (task_info[i].state == TASK_STATE_BLOCK) {
@@ -216,56 +227,26 @@ void update_global_counter(void)
 		}
 	}
 }
-/*
 
-void __update_task_state(struct task_info * task)
-{
-	uint32_t elapsed;
-
-	if (task->state == TASK_STATE_BLOCK) {
-
-		// compare g counter and task block counter.
-		// if g counter is bigger than count start, it means overflow.
-		if (task->block_count_start > g_counter ) {
-			elapsed = (0xFFFFFFFF - (task->block_count_start)) + g_counter;
-		} else {
-			elapsed = (g_counter - task->block_count_start)
-		}
-
-		if (elapsed > task->block_count_value) {
-			task->state = TASK_STATE_RUNNING;
-		}
-	}
-}
-
-void update_task_state(void)
+struct task_info * systick_get_next_task(void)
 {
 	int i;
+	struct task_info * task;
 
-	for (i=0; i<MAX_TASK; i++) {
-		__update_task_state( &task_info[i] );
+	systick_update_task_state();
+
+	for(i=0; i<MAX_TASK; i++) {
+
+		task_count = (task_count + 1) % MAX_TASK;
+
+		if (task_info[task_count].state == TASK_STATE_RUNNING) {
+			task = &task_info[task_count];
+			break;
+		}
 	}
+
+	return task;
 }
-
-void update_running_task(void)
-{
-	int i
-
-	update_global_counter();
-	update_task_state();
-
-	for (i=0; i<MAX_TASK; i++) {
-		if (task_info[i].state == TASK_STATE_RUNNING)
-			current_task = &task_info[i];
-	}
-}
-
-
-int is_current_task_blocked(void)
-{
-	return ((current_task->state == TASK_STATE_BLOCK) ? 1 : 0);
-}
-*/
 
 // before start task, change stack pointer to PSP.
 __attribute__((naked)) void change_sp_to_psp(void)
@@ -281,29 +262,6 @@ __attribute__((naked)) void change_sp_to_psp(void)
 
 	__asm__("BX LR");
 }
-
-/*
-void init_task_stack(uint32_t **pstack, uint32_t stack_start, uint32_t init_stack_size, void *task_addr)
-{
-	int i;
-	uint32_t * stack_pointer;
-
-	*pstack = (uint32_t *)(stack_start - init_stack_size); // stack pointer is updated to end of stack.
-
-	stack_pointer = *pstack;
-
-	printf("stack pointer: %p\n", stack_pointer);
-
-	// clear all stack contents.
-	for(i=0; i<init_stack_size/sizeof(int); i++) {
-		stack_pointer[i] = 0;
-	}
-
-	stack_pointer[15] = 0x1000000; // XPSR T bit is set to high.
-	stack_pointer[14] = (uint32_t)((void *)task_addr + 0x1); // set LSB one.
-	stack_pointer[13] = 0xFFFFFFFD; // return to thread mode with PSP.
-
-}*/
 
 void init_task_stack(struct task_struct * task)
 {
@@ -337,11 +295,6 @@ int main(void)
 		init_task_stack(&task_info[i]);
 	}
 
-	//init_task_stack(&task_stack[0], T1_STACK_START, 16 * sizeof(int), task1_handler);
-	//init_task_stack(&task_stack[1], T2_STACK_START, 16 * sizeof(int), task2_handler);
-	//init_task_stack(&task_stack[2], T3_STACK_START, 16 * sizeof(int), task3_handler);
-	//init_task_stack(&task_stack[3], T4_STACK_START, 16 * sizeof(int), task4_handler);
-
 	led_init_all();
 
 	change_sp_to_psp();
@@ -370,30 +323,45 @@ void init_systick_timer(uint32_t tick_hz)
 
 }
 
-__attribute__((naked)) void SysTick_Handler(void)
+__attribute__((naked)) void PendSV_Handler(void)
 {
-	// save exception return LR magic number.
 	__asm__("PUSH {LR}");
-
-	__asm__("BL update_global_counter");
-	// __asm__("BL update_running_task");
-
 	// 1. save current task context.
 	__asm__("MRS R0, PSP");
 	__asm__("STMDB R0!, {R4, R5, R6, R7, R8, R9, R10, R11}");
-	__asm__("BL update_current_stack");
+	__asm__("BL pendsv_update_stack_pointer");
 
 	// 2. restore next task context.
-	__asm__("BL update_task_count");
-	__asm__("BL get_current_stack");
+	__asm__("BL pendsv_next_task_stack_pointer");
 	__asm__("LDMIA R0!, {R4, R5, R6, R7, R8, R9, R10, R11}");
 	__asm__("MSR PSP, R0");
+
+	__asm__("POP {LR}");
+	__asm__("BX LR");
+}
+
+void SysTick_Handler(void)
+{
+	uint32_t * pICSR = (uint32_t *)SCB_ICSR_BASE;
+
+	cur_task = &task_info[task_count];
+	next_task = systick_get_next_task();
+
+	if (cur_task != next_task) {
+		// call enable pend SV handler.
+		*pICSR |= (0x1<<28); // set pend SV exception pending.
+	}
+
+	// save exception return LR magic number.
+	// __asm__("BL update_global_counter");
+	// __asm__("BL update_running_task");
+
+	// 2. restore next task context.
+	// __asm__("BL update_task_count");
 
 	// __asm__("PUSH {R0-R3,R12,LR}");
 	// printf("systick handler");
 	// __asm__("POP {R0-R3,R12,LR}");
-	__asm__("POP {LR}");
-	__asm__("BX LR");
 }
 
 void task1_handler(void)
