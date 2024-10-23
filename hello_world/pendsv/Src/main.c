@@ -58,16 +58,22 @@ void task4_handler(void);
 #define T4_STACK_SIZE	(TASK_STACK_SIZE)
 #define T4_STACK_END	(T4_STACK_START - T4_STACK_SIZE)
 
-#define SCHED_STACK_START	(T4_STACK_END)
+#define T5_STACK_START	(T4_STACK_END)
+#define T5_STACK_SIZE	(TASK_STACK_SIZE)
+#define T5_STACK_END	(T5_STACK_START - T5_STACK_SIZE)
+
+#define SCHED_STACK_START	(T5_STACK_END)
 #define SCHED_STACK_END	(SCHED_STACK_START - SCHED_STACK_SIZE)
 
-#define MAX_TASK	4
+#define MAX_TASK	5
 
 #define DUMMY_STACK_FRAME_SIZE	(16 * sizeof(int))
 
 // systick timer
 #define SYSTICK_HZ	(16000000)
-#define TICK_HZ	(1000U) // 1KHZ
+// #define TICK_HZ	(1000U) // 1KHZ
+#define TICK_HZ	(100U) // 1HZ
+
 #define SYST_CSR_BASE	(0xE000E010)
 #define SYST_RVR_BASE	(0xE000E014)
 
@@ -89,14 +95,19 @@ void task1_handler(void);
 void task2_handler(void);
 void task3_handler(void);
 void task4_handler(void);
+void idle_handler(void);
 
 struct task_struct {
 	int state;
 	uint32_t * stack;
 	void (*handler)(void);
+	uint32_t block_count_start;
+	uint32_t block_count_value;
 };
 
 int task_count = 0;
+struct task_struct * current_task;
+uint32_t g_counter = 0;
 
 struct task_struct task_info[MAX_TASK] =
 {
@@ -104,24 +115,38 @@ struct task_struct task_info[MAX_TASK] =
 				.state = TASK_STATE_RUNNING,
 				.stack = T1_STACK_START,
 				.handler = task1_handler,
+				.block_count_start = 0,
+				.block_count_value = 0,
 		},
 		{
 				.state = TASK_STATE_RUNNING,
 				.stack = T2_STACK_START,
 				.handler = task2_handler,
+				.block_count_start = 0,
+				.block_count_value = 0,
 		},
 		{
 				.state = TASK_STATE_RUNNING,
 				.stack = T3_STACK_START,
 				.handler = task3_handler,
+				.block_count_start = 0,
+				.block_count_value = 0,
 		},
 		{
 				.state = TASK_STATE_RUNNING,
 				.stack = T4_STACK_START,
 				.handler = task4_handler,
+				.block_count_start = 0,
+				.block_count_value = 0,
+		},
+		{
+				.state = TASK_STATE_RUNNING,
+				.stack = T5_STACK_START,
+				.handler = idle_handler,
+				.block_count_start = 0,
+				.block_count_value = 0,
 		}
 };
-
 
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
@@ -143,18 +168,104 @@ uint32_t * get_current_stack(void)
 	return task_info[task_count].stack;
 }
 
+
 void update_current_stack(uint32_t current_stack)
 {
-	task_info[task_count].stack = current_stack;
-	// task_stack[task_count] = current_stack;
-	//printf("update current stack idx: %d\n", task_count);
+	task_info[task_count].stack = (uint32_t * )current_stack;
 }
 
 void update_task_count(void)
 {
-	task_count = (task_count + 1) % MAX_TASK;
-	//printf("update task count: %d\n", task_count);
+	int i;
+	for (i=0; i<MAX_TASK; i++) {
+		// base scheudling method is round robin. so update task counter first.
+		task_count = (task_count + 1) % MAX_TASK;
+		if (task_info[task_count].state == TASK_STATE_RUNNING)
+			break;
+
+	}
 }
+
+void task_delay(uint32_t time_ms, int task_idx)
+{
+	uint32_t count;
+
+	count = ( time_ms * TICK_HZ )/1000;
+
+	if (task_info[task_idx].state != TASK_STATE_BLOCK) {
+		task_info[task_idx].block_count_value = count;
+		task_info[task_idx].state = TASK_STATE_BLOCK;
+	}
+}
+
+
+void update_global_counter(void)
+{
+	int i;
+
+	g_counter = (g_counter + 1) % 0xFFFFFFFF;
+
+	for(i=0; i<MAX_TASK; i++) {
+		if (task_info[i].state == TASK_STATE_BLOCK) {
+			task_info[i].block_count_value--;
+			// printf("task_info[%d].count: %d\n", i, task_info[i].block_count_value);
+			if (task_info[i].block_count_value == 0) {
+				task_info[i].state = TASK_STATE_RUNNING;
+				// printf("task_info[%d].state is runnning\n", i);
+			}
+		}
+	}
+}
+/*
+
+void __update_task_state(struct task_info * task)
+{
+	uint32_t elapsed;
+
+	if (task->state == TASK_STATE_BLOCK) {
+
+		// compare g counter and task block counter.
+		// if g counter is bigger than count start, it means overflow.
+		if (task->block_count_start > g_counter ) {
+			elapsed = (0xFFFFFFFF - (task->block_count_start)) + g_counter;
+		} else {
+			elapsed = (g_counter - task->block_count_start)
+		}
+
+		if (elapsed > task->block_count_value) {
+			task->state = TASK_STATE_RUNNING;
+		}
+	}
+}
+
+void update_task_state(void)
+{
+	int i;
+
+	for (i=0; i<MAX_TASK; i++) {
+		__update_task_state( &task_info[i] );
+	}
+}
+
+void update_running_task(void)
+{
+	int i
+
+	update_global_counter();
+	update_task_state();
+
+	for (i=0; i<MAX_TASK; i++) {
+		if (task_info[i].state == TASK_STATE_RUNNING)
+			current_task = &task_info[i];
+	}
+}
+
+
+int is_current_task_blocked(void)
+{
+	return ((current_task->state == TASK_STATE_BLOCK) ? 1 : 0);
+}
+*/
 
 // before start task, change stack pointer to PSP.
 __attribute__((naked)) void change_sp_to_psp(void)
@@ -261,20 +372,20 @@ void init_systick_timer(uint32_t tick_hz)
 
 __attribute__((naked)) void SysTick_Handler(void)
 {
-
+	// save exception return LR magic number.
 	__asm__("PUSH {LR}");
+
+	__asm__("BL update_global_counter");
+	// __asm__("BL update_running_task");
+
 	// 1. save current task context.
 	__asm__("MRS R0, PSP");
 	__asm__("STMDB R0!, {R4, R5, R6, R7, R8, R9, R10, R11}");
-
-	// update stack for current task.
-	// __asm__("MOV %0, R0":"=r"((uint32_t)task_stack[task_count]));
-
 	__asm__("BL update_current_stack");
-	__asm__("BL update_task_count");
-	__asm__("BL get_current_stack");
 
 	// 2. restore next task context.
+	__asm__("BL update_task_count");
+	__asm__("BL get_current_stack");
 	__asm__("LDMIA R0!, {R4, R5, R6, R7, R8, R9, R10, R11}");
 	__asm__("MSR PSP, R0");
 
@@ -290,9 +401,9 @@ void task1_handler(void)
 	while(1) {
 		//printf("%s\n", __func__);
 		led_on(LED_GREEN);
-		delay(DELAY_COUNT_1S );
+		task_delay(1000,0);
 		led_off(LED_GREEN);
-		delay(DELAY_COUNT_1S );
+		task_delay(1000,0);
 	}
 }
 
@@ -301,9 +412,9 @@ void task2_handler(void)
 	while(1) {
 		//printf("%s\n", __func__);
 		led_on(LED_ORANGE);
-		delay(DELAY_COUNT_1S );
+		task_delay(1000, 1);
 		led_off(LED_ORANGE);
-		delay(DELAY_COUNT_1S );
+		task_delay(1000, 1);
 	}
 }
 
@@ -312,9 +423,9 @@ void task3_handler(void)
 	while(1) {
 		//printf("%s\n", __func__);
 		led_on(LED_RED);
-		delay(DELAY_COUNT_1S );
+		task_delay(1000, 2);
 		led_off(LED_RED);
-		delay(DELAY_COUNT_1S );
+		task_delay(1000, 2);
 	}
 }
 
@@ -323,9 +434,16 @@ void task4_handler(void)
 	while(1) {
 		//printf("%s\n", __func__);
 		led_on(LED_BLUE);
-		delay(DELAY_COUNT_1S );
+		task_delay(1000, 3);
 		led_off(LED_BLUE);
-		delay(DELAY_COUNT_1S );
+		task_delay(1000, 3);
+	}
+}
+
+void idle_handler(void)
+{
+	// idle handler.
+	while(1) {
 	}
 }
 
