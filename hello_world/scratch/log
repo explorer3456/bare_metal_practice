@@ -1,0 +1,188 @@
+
+main.o:     file format elf32-littlearm
+main.o
+architecture: armv7e-m, flags 0x00000011:
+HAS_RELOC, HAS_SYMS
+start address 0x00000000
+private flags = 0x5000000: [Version5 EABI]
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         000007b8  00000000  00000000  00000034  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  1 .data         00000064  00000000  00000000  000007ec  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, DATA
+  2 .bss          00000014  00000000  00000000  00000850  2**2
+                  ALLOC
+  3 .rodata       000000f7  00000000  00000000  00000850  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  4 .comment      00000034  00000000  00000000  00000947  2**0
+                  CONTENTS, READONLY
+  5 .ARM.attributes 0000002e  00000000  00000000  0000097b  2**0
+                  CONTENTS, READONLY
+SYMBOL TABLE:
+00000000 l    df *ABS*	00000000 main.c
+00000000 l    d  .text	00000000 .text
+00000000 l    d  .data	00000000 .data
+00000000 l    d  .bss	00000000 .bss
+00000000 l    d  .rodata	00000000 .rodata
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .ARM.attributes	00000000 .ARM.attributes
+00000000 g     O .bss	00000004 task_count
+00000004 g     O .bss	00000004 current_task
+00000008 g     O .bss	00000004 g_counter
+0000000c g     O .bss	00000004 next_task
+00000010 g     O .bss	00000004 cur_task
+00000000 g     O .data	00000064 task_info
+00000524 g     F .text	00000026 task1_handler
+0000054a g     F .text	00000026 task2_handler
+00000570 g     F .text	00000022 task3_handler
+00000592 g     F .text	00000026 task4_handler
+000005b8 g     F .text	00000006 idle_handler
+00000000 g     F .text	00000008 init_scheduler_stack
+00000008 g     F .text	00000028 get_current_stack
+00000030 g     F .text	00000030 update_current_stack
+00000060 g     F .text	00000020 pendsv_update_stack_pointer
+00000080 g     F .text	00000018 pendsv_next_task_stack_pointer
+00000098 g     F .text	00000068 update_task_count
+00000100 g     F .text	0000008c systick_update_task_state
+0000018c g     F .text	0000007c systick_get_next_task
+00000208 g     F .text	00000078 get_next_task
+00000280 g     F .text	0000005c schedule
+000002dc g     F .text	0000006c task_delay
+00000348 g     F .text	0000001e change_sp_to_psp
+00000366 g     F .text	00000090 init_task_stack
+000003f6 g     F .text	00000062 main
+00000000         *UND*	00000000 led_init_all
+00000458 g     F .text	0000004c init_systick_timer
+000004a4 g     F .text	00000022 PendSV_Handler
+000004c6 g     F .text	0000005e SysTick_Handler
+00000000         *UND*	00000000 led_on
+00000000         *UND*	00000000 led_off
+000005be g     F .text	00000014 MemManage_Handler
+000005d2 g     F .text	000000ee __MemManage_Handler
+00000000         *UND*	00000000 printf
+00000000         *UND*	00000000 puts
+000006c0 g     F .text	00000010 BusFault_Handler
+000006d0 g     F .text	0000000a UsageFault_Handler
+000006da g     F .text	000000ce __UsageFault_Handler
+000007a8 g     F .text	00000010 HardFault_Handler
+
+
+RELOCATION RECORDS FOR [.text]:
+OFFSET   TYPE              VALUE 
+00000028 R_ARM_ABS32       task_count
+0000002c R_ARM_ABS32       task_info
+00000058 R_ARM_ABS32       task_count
+0000005c R_ARM_ABS32       task_info
+0000007c R_ARM_ABS32       cur_task
+00000094 R_ARM_ABS32       next_task
+000000f4 R_ARM_ABS32       task_count
+000000fc R_ARM_ABS32       task_info
+00000188 R_ARM_ABS32       task_info
+00000192 R_ARM_THM_CALL    systick_update_task_state
+000001fc R_ARM_ABS32       task_count
+00000204 R_ARM_ABS32       task_info
+00000274 R_ARM_ABS32       task_count
+0000027c R_ARM_ABS32       task_info
+0000029e R_ARM_THM_CALL    get_next_task
+000002cc R_ARM_ABS32       task_count
+000002d0 R_ARM_ABS32       task_info
+000002d4 R_ARM_ABS32       cur_task
+000002d8 R_ARM_ABS32       next_task
+00000332 R_ARM_THM_CALL    schedule
+00000344 R_ARM_ABS32       task_info
+0000034a R_ARM_THM_CALL    get_current_stack
+0000040e R_ARM_THM_CALL    init_scheduler_stack
+00000428 R_ARM_THM_CALL    init_task_stack
+00000438 R_ARM_THM_CALL    led_init_all
+0000043c R_ARM_THM_CALL    change_sp_to_psp
+00000442 R_ARM_THM_CALL    init_systick_timer
+00000446 R_ARM_THM_CALL    task1_handler
+00000454 R_ARM_ABS32       task_info
+000004ae R_ARM_THM_CALL    pendsv_update_stack_pointer
+000004b2 R_ARM_THM_CALL    pendsv_next_task_stack_pointer
+000004e4 R_ARM_THM_CALL    systick_get_next_task
+00000514 R_ARM_ABS32       task_count
+00000518 R_ARM_ABS32       task_info
+0000051c R_ARM_ABS32       cur_task
+00000520 R_ARM_ABS32       next_task
+0000052a R_ARM_THM_CALL    led_on
+00000534 R_ARM_THM_CALL    task_delay
+0000053a R_ARM_THM_CALL    led_off
+00000544 R_ARM_THM_CALL    task_delay
+00000550 R_ARM_THM_CALL    led_on
+0000055a R_ARM_THM_CALL    task_delay
+00000560 R_ARM_THM_CALL    led_off
+0000056a R_ARM_THM_CALL    task_delay
+00000576 R_ARM_THM_CALL    led_on
+0000057e R_ARM_THM_CALL    task_delay
+00000584 R_ARM_THM_CALL    led_off
+0000058c R_ARM_THM_CALL    task_delay
+00000598 R_ARM_THM_CALL    led_on
+000005a2 R_ARM_THM_CALL    task_delay
+000005a8 R_ARM_THM_CALL    led_off
+000005b2 R_ARM_THM_CALL    task_delay
+000005c6 R_ARM_THM_CALL    __MemManage_Handler
+000005e2 R_ARM_THM_CALL    printf
+000005ee R_ARM_THM_CALL    printf
+000005fc R_ARM_THM_CALL    printf
+0000060a R_ARM_THM_CALL    printf
+00000618 R_ARM_THM_CALL    printf
+00000626 R_ARM_THM_CALL    printf
+00000634 R_ARM_THM_CALL    printf
+00000642 R_ARM_THM_CALL    printf
+00000650 R_ARM_THM_CALL    printf
+0000066c R_ARM_THM_CALL    printf
+00000674 R_ARM_THM_CALL    printf
+0000067a R_ARM_THM_CALL    puts
+00000688 R_ARM_ABS32       .rodata
+0000068c R_ARM_ABS32       .rodata
+00000690 R_ARM_ABS32       .rodata
+00000694 R_ARM_ABS32       .rodata
+00000698 R_ARM_ABS32       .rodata
+0000069c R_ARM_ABS32       .rodata
+000006a0 R_ARM_ABS32       .rodata
+000006a4 R_ARM_ABS32       .rodata
+000006a8 R_ARM_ABS32       .rodata
+000006b4 R_ARM_ABS32       .rodata
+000006b8 R_ARM_ABS32       .rodata
+000006bc R_ARM_ABS32       .rodata
+000006c6 R_ARM_THM_CALL    printf
+000006cc R_ARM_ABS32       .rodata
+000006ea R_ARM_THM_CALL    printf
+000006f6 R_ARM_THM_CALL    printf
+00000704 R_ARM_THM_CALL    printf
+00000712 R_ARM_THM_CALL    printf
+00000720 R_ARM_THM_CALL    printf
+0000072e R_ARM_THM_CALL    printf
+0000073c R_ARM_THM_CALL    printf
+0000074a R_ARM_THM_CALL    printf
+00000758 R_ARM_THM_CALL    printf
+0000076a R_ARM_THM_CALL    printf
+00000770 R_ARM_THM_CALL    puts
+00000778 R_ARM_ABS32       .rodata
+0000077c R_ARM_ABS32       .rodata
+00000780 R_ARM_ABS32       .rodata
+00000784 R_ARM_ABS32       .rodata
+00000788 R_ARM_ABS32       .rodata
+0000078c R_ARM_ABS32       .rodata
+00000790 R_ARM_ABS32       .rodata
+00000794 R_ARM_ABS32       .rodata
+00000798 R_ARM_ABS32       .rodata
+000007a0 R_ARM_ABS32       .rodata
+000007a4 R_ARM_ABS32       .rodata
+000007ae R_ARM_THM_CALL    printf
+000007b4 R_ARM_ABS32       .rodata
+000006d4 R_ARM_THM_JUMP24  __UsageFault_Handler
+
+
+RELOCATION RECORDS FOR [.data]:
+OFFSET   TYPE              VALUE 
+00000008 R_ARM_ABS32       task1_handler
+0000001c R_ARM_ABS32       task2_handler
+00000030 R_ARM_ABS32       task3_handler
+00000044 R_ARM_ABS32       task4_handler
+00000058 R_ARM_ABS32       idle_handler
+
+
