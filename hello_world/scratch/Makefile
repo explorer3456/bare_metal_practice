@@ -1,5 +1,5 @@
 CC=arm-none-eabi-gcc
-CFLAGS= -c -mcpu=cortex-m4 -mthumb -std=gnu11 -O0 -Wall
+CFLAGS= -c -mcpu=cortex-m4 -mthumb -std=gnu11 -O0
 
 # $^ : dependency
 # $@ : target
