@@ -7,12 +7,18 @@
 #define STACK_START	SRAM_END
 
 void Reset_Handler(void);
+void NMI_Handler(void);
 
-uint32_t vectors[] = {
+uint32_t vectors[] __attribute__ ((section(".vector"))) = {
+
 	STACK_START, // MSP
 	(uint32_t *)Reset_Handler,
 };
 
 void Reset_Handler(void)
+{
+}
+
+void NMI_Handler(void)
 {
 }
