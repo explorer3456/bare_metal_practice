@@ -7,18 +7,23 @@
 #define STACK_START	SRAM_END
 
 void Reset_Handler(void);
-void NMI_Handler(void);
+void Default_Handler(void);
+void NMI_Handler(void) __attribute__((weak, alias("Default_Handler")));
+void HardFault_Handler(void) __attribute__((weak, alias("Default_Handler")));
 
 uint32_t vectors[] __attribute__ ((section(".vector"))) = {
 
 	STACK_START, // MSP
 	(uint32_t *)Reset_Handler,
+	(uint32_t *)NMI_Handler,
+	(uint32_t *)HardFault_Handler
 };
 
-void Reset_Handler(void)
+void Default_Handler(void)
 {
+	while(1);
 }
 
-void NMI_Handler(void)
+void Reset_Handler(void)
 {
 }
