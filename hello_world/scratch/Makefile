@@ -1,12 +1,12 @@
 CC=arm-none-eabi-gcc
-CFLAGS= -c -mcpu=cortex-m4 -mthumb -std=gnu11 -O0
+CFLAGS= -c -mcpu=cortex-m4 -mthumb -std=gnu11 -O0 -Wall
 
 # $^ : dependency
 # $@ : target
 # left hand : target
 # right hand : dependency
 
-all: main.o led.o
+all: main.o led.o stm32_startup.o
 
 main.o : main.c
 # $(CC) $(CFLAGS) main.c -o main.o
@@ -16,6 +16,8 @@ main.o : main.c
 led.o : led.c
 	$(CC) $(CFLAGS) -o $@ $^
 
+stm32_startup.o : stm32_startup.c
+	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	rm *.o
+	rm *.o *.elf
