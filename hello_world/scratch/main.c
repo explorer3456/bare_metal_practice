@@ -171,7 +171,7 @@ __attribute__((naked)) void init_scheduler_stack(uint32_t stack_start)
 
 uint32_t * get_current_stack(void)
 {
-	//printf("get current stack idx: %d\n", task_count);
+	////printf("get current stack idx: %d\n", task_count);
 	// return task_stack[task_count];
 	return task_info[task_count].stack;
 }
@@ -211,10 +211,10 @@ void systick_update_task_state(void)
 	for(i=0; i<MAX_TASK; i++) {
 		if (task_info[i].state == TASK_STATE_BLOCK) {
 			task_info[i].block_count_value--;
-			// printf("task_info[%d].count: %d\n", i, task_info[i].block_count_value);
+			// //printf("task_info[%d].count: %d\n", i, task_info[i].block_count_value);
 			if (task_info[i].block_count_value == 0) {
 				task_info[i].state = TASK_STATE_RUNNING;
-				// printf("task_info[%d].state is runnning\n", i);
+				// //printf("task_info[%d].state is runnning\n", i);
 			}
 		}
 	}
@@ -396,14 +396,14 @@ void SysTick_Handler(void)
 	// __asm__("BL update_task_count");
 
 	// __asm__("PUSH {R0-R3,R12,LR}");
-	// printf("systick handler");
+	// //printf("systick handler");
 	// __asm__("POP {R0-R3,R12,LR}");
 }
 
 void task1_handler(void)
 {
 	while(1) {
-		//printf("%s\n", __func__);
+		////printf("%s\n", __func__);
 		led_on(LED_GREEN);
 		task_delay(1000,0);
 		led_off(LED_GREEN);
@@ -414,7 +414,7 @@ void task1_handler(void)
 void task2_handler(void)
 {
 	while(1) {
-		//printf("%s\n", __func__);
+		////printf("%s\n", __func__);
 		led_on(LED_ORANGE);
 		task_delay(1000, 1);
 		led_off(LED_ORANGE);
@@ -425,7 +425,7 @@ void task2_handler(void)
 void task3_handler(void)
 {
 	while(1) {
-		//printf("%s\n", __func__);
+		////printf("%s\n", __func__);
 		led_on(LED_RED);
 		task_delay(100, 2);
 		led_off(LED_RED);
@@ -436,7 +436,7 @@ void task3_handler(void)
 void task4_handler(void)
 {
 	while(1) {
-		//printf("%s\n", __func__);
+		////printf("%s\n", __func__);
 		led_on(LED_BLUE);
 		task_delay(500, 3);
 		led_off(LED_BLUE);
@@ -465,15 +465,15 @@ void __MemManage_Handler(uint32_t *msp_value)
 	uint32_t * pMSP = (uint32_t *)msp_value;
 
 	// print stack frame of previous context.
-	printf("pMSP: %p\n", pMSP);
-	printf("R0: %08x\n", pMSP[0]);
-	printf("R1: %08x\n", pMSP[1]);
-	printf("R2: %08x\n", pMSP[2]);
-	printf("R3: %08x\n", pMSP[3]);
-	printf("R12: %08x\n", pMSP[4]);
-	printf("LR: %08x\n", pMSP[5]);
-	printf("PC: %08x\n", pMSP[6]);
-	printf("XPSR: %08x\n", pMSP[7]);
+	//printf("pMSP: %p\n", pMSP);
+	//printf("R0: %08x\n", pMSP[0]);
+	//printf("R1: %08x\n", pMSP[1]);
+	//printf("R2: %08x\n", pMSP[2]);
+	//printf("R3: %08x\n", pMSP[3]);
+	//printf("R12: %08x\n", pMSP[4]);
+	//printf("LR: %08x\n", pMSP[5]);
+	//printf("PC: %08x\n", pMSP[6]);
+	//printf("XPSR: %08x\n", pMSP[7]);
 
 	uint32_t * pMMSR = (uint32_t *)SCB_MMSR_BASE;
 	uint32_t * pMMAR = (uint32_t *)SCB_MMAR_BASE;
@@ -481,14 +481,14 @@ void __MemManage_Handler(uint32_t *msp_value)
 	uint32_t data = *pMMSR;
 	uint32_t addr = *pMMAR;
 
-	printf("MemManage fault status: %08x\n", data);
-	printf("MemManage address: %08x\n", addr);
+	//printf("MemManage fault status: %08x\n", data);
+	//printf("MemManage address: %08x\n", addr);
 
-	printf("MemManage fault\n");
+	//printf("MemManage fault\n");
 }
 void BusFault_Handler(void)
 {
-	printf("Bus fault");
+	//printf("Bus fault");
 	while(1);
 }
 
@@ -504,27 +504,27 @@ void __UsageFault_Handler(uint32_t *msp_value)
 
 
 	// print stack frame of previous context.
-	printf("pMSP: %p\n", pMSP);
-	printf("R0: %08x\n", pMSP[0]);
-	printf("R1: %08x\n", pMSP[1]);
-	printf("R2: %08x\n", pMSP[2]);
-	printf("R3: %08x\n", pMSP[3]);
-	printf("R12: %08x\n", pMSP[4]);
-	printf("LR: %08x\n", pMSP[5]);
-	printf("PC: %08x\n", pMSP[6]);
-	printf("XPSR: %08x\n", pMSP[7]);
+	//printf("pMSP: %p\n", pMSP);
+	//printf("R0: %08x\n", pMSP[0]);
+	//printf("R1: %08x\n", pMSP[1]);
+	//printf("R2: %08x\n", pMSP[2]);
+	//printf("R3: %08x\n", pMSP[3]);
+	//printf("R12: %08x\n", pMSP[4]);
+	//printf("LR: %08x\n", pMSP[5]);
+	//printf("PC: %08x\n", pMSP[6]);
+	//printf("XPSR: %08x\n", pMSP[7]);
 
 	uint32_t * pUFSR = (uint32_t *)SCB_UFSR_BASE;
 	uint32_t data = *pUFSR;
-	printf("Usage fault status: %08x\n", data);
-	printf("usage fault\n");
+	//printf("Usage fault status: %08x\n", data);
+	//printf("usage fault\n");
 	while(1);
 }
 
 
 void HardFault_Handler(void)
 {
-	printf("Hard fault");
+	//printf("Hard fault");
 	while(1);
 }
 
