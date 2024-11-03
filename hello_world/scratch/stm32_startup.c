@@ -114,4 +114,9 @@ void Default_Handler(void)
 
 void Reset_Handler(void)
 {
+	// copy .data section to SRAM.
+
+	// Init the .bss section to zero in SRAM.
+
+	// call main.
 }
