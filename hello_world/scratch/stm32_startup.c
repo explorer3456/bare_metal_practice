@@ -105,13 +105,22 @@ void CRYP_IRQHandler             	(void) __attribute__ ((weak, alias("Default_Ha
 void HASH_RNG_IRQHandler         	(void) __attribute__ ((weak, alias("Default_Handler")));
 void FPU_IRQHandler              	(void) __attribute__ ((weak, alias("Default_Handler"))); 
 
-uint32_t vectors[] __attribute__ ((section(".vector"))) = {
+uint32_t vectors[97] __attribute__ ((section(".vector"))) = {
 
 	STACK_START, // MSP
 	(uint32_t *)Reset_Handler,
 	(uint32_t *)NMI_Handler,
 	(uint32_t *)HardFault_Handler,
 	(uint32_t *)MemManage_Handler,
+	(uint32_t *)BusFault_Handler,
+	(uint32_t *)UsageFault_Handler,
+	(uint32_t *)SVC_Handler,
+	(uint32_t *)DebugMon_Handler,
+	(uint32_t *)PendSV_Handler,
+	(uint32_t *)SysTick_Handler,
+	(uint32_t *)WWDG_IRQHandler,
+	(uint32_t *)PVD_IRQHandler,
+	0,
 };
 
 void Default_Handler(void)
@@ -129,7 +138,7 @@ void Reset_Handler(void)
 	// copy .data section to SRAM.
 	pSRAM = (uint32_t *)SRAM_START;
 	pSRC = (uint32_t *)(&_etext);
-	size = (&_edata - &_sdata);
+	size = (uint32_t)&_edata - (uint32_t)&_sdata;
 
 	// copy data section from FLASH to SRAM.
 	for(i=0; i<size/sizeof(uint32_t); i++) {
@@ -137,7 +146,7 @@ void Reset_Handler(void)
 	}
 
 	// Init the .bss section to zero in SRAM.
-	size = (&_ebss - &_sbss);
+	size = (uint32_t)&_ebss - (uint32_t)&_sbss;
 
 	for(i=0; i<size/sizeof(uint32_t); i++) {
 		*(pSRAM + i) = 0;
