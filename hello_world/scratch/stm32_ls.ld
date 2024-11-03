@@ -13,6 +13,7 @@ SECTIONS
 		*(.vector)
 		*(.text)
 		*(.rodata)
+		. = ALIGN(4);
 		_etext = .;
 	}>FLASH AT> FLASH
 
@@ -20,6 +21,7 @@ SECTIONS
 	{
 		_sdata = .;
 		*(.data)
+		. = ALIGN(4);
 		_edata = .;
 	}>SRAM1 AT> FLASH
 
@@ -27,6 +29,8 @@ SECTIONS
 	{
 		_sbss = .;
 		*(.bss)
+		*(COMMON)
+		. = ALIGN(4);
 		_ebss = .;
 	}>SRAM1 AT> SRAM1
 }

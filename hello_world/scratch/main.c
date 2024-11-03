@@ -112,6 +112,10 @@ uint32_t g_counter = 0;
 struct task_struct * next_task;
 struct task_struct * cur_task;
 
+const uint32_t const_val1 = 100;
+const uint32_t const_val2 = 200;
+const uint8_t const_val3 = 8;
+
 struct task_struct task_info[MAX_TASK] =
 {
 		{
