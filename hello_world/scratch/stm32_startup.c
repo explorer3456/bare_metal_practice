@@ -6,6 +6,13 @@
 
 #define STACK_START	SRAM_END
 
+extern uint32_t _etext;
+extern uint32_t _sdata;
+extern uint32_t _edata;
+extern uint32_t _sbss;
+extern uint32_t _ebss;
+int (main)(void);
+
 void Reset_Handler(void);
 void NMI_Handler 					(void) __attribute__ ((weak, alias("Default_Handler")));
 void HardFault_Handler 				(void) __attribute__ ((weak, alias("Default_Handler")));
@@ -114,9 +121,28 @@ void Default_Handler(void)
 
 void Reset_Handler(void)
 {
+	uint32_t * pSRAM;
+	uint32_t * pSRC;
+	uint32_t size;
+	int i;
+
 	// copy .data section to SRAM.
+	pSRAM = (uint32_t *)SRAM_START;
+	pSRC = (uint32_t *)(&_etext);
+	size = (&_edata - &_sdata);
+
+	// copy data section from FLASH to SRAM.
+	for(i=0; i<size/sizeof(uint32_t); i++) {
+		*(pSRAM + i) = *(pSRC + i);
+	}
 
 	// Init the .bss section to zero in SRAM.
+	size = (&_ebss - &_sbss);
+
+	for(i=0; i<size/sizeof(uint32_t); i++) {
+		*(pSRAM + i) = 0;
+	}
 
 	// call main.
+	main();
 }
