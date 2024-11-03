@@ -1,6 +1,6 @@
 CC=arm-none-eabi-gcc
 CFLAGS= -c -mcpu=cortex-m4 -mthumb -std=gnu11 -O0
-LDFLAGS= -nostdlib -T stm32_ls.ld
+LDFLAGS= -nostdlib -T stm32_ls.ld -Wl,-Map=final.map
 
 # $^ : dependency
 # $@ : target
