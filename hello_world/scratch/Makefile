@@ -1,6 +1,7 @@
 CC=arm-none-eabi-gcc
 CFLAGS= -c -mcpu=cortex-m4 -mthumb -mfloat-abi=soft -std=gnu11 -O0
-LDFLAGS= --specs=nano.specs -mcpu=cortex-m4 -mthumb -mfloat-abi=soft -T stm32_ls.ld -Wl,-Map=final.map
+#LDFLAGS= --specs=nano.specs -mcpu=cortex-m4 -mthumb -mfloat-abi=soft -T stm32_ls.ld -Wl,-Map=final.map
+LDFLAGS_SEMI= --specs=rdimon.specs -mcpu=cortex-m4 -mthumb -mfloat-abi=soft -T stm32_ls.ld -Wl,-Map=final.map
 
 # $^ : dependency
 # $@ : target
@@ -8,6 +9,9 @@ LDFLAGS= --specs=nano.specs -mcpu=cortex-m4 -mthumb -mfloat-abi=soft -T stm32_ls
 # right hand : dependency
 
 all: main.o led.o stm32_startup.o my_syscall.o final.elf
+
+semi: main.o led.o stm32_startup.o final_semi.elf
+
 
 main.o : main.c
 # $(CC) $(CFLAGS) main.c -o main.o
@@ -25,6 +29,9 @@ my_syscall.o : my_syscall.c
 
 final.elf: main.o led.o stm32_startup.o my_syscall.o
 	$(CC) $(LDFLAGS) -o $@ $^
+
+final_semi.elf: main.o led.o stm32_startup.o
+	$(CC) $(LDFLAGS_SEMI) -o $@ $^
 
 clean:
 	rm *.o *.elf

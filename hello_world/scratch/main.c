@@ -25,6 +25,8 @@ void task2_handler(void);
 void task3_handler(void);
 void task4_handler(void);
 
+extern void initialise_monitor_handles();
+
 
 #define TASK_STACK_SIZE	(1024U)
 #define SCHED_STACK_SIZE	(1024U)
@@ -328,6 +330,10 @@ int main(void)
 	pSHCSR = (uint32_t *)SCB_SHCSR_BASE;
 	// *pSHCSR |= (1<<18)|(1<<17)|(1<<16); // enable Usage fault, Bus fault, Mem fault.
 	*pSHCSR |= (1<<17)|(1<<16); // enable Usage fault, Bus fault, Mem fault.
+
+	initialise_monitor_handles();
+
+	printf("semi hosting test\n");
 
 	init_scheduler_stack(SCHED_STACK_START);
 
