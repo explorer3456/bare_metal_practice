@@ -12,6 +12,8 @@ SECTIONS
 	{
 		*(.vector)
 		*(.text)
+		*(.init)
+		*(.fini)
 		*(.rodata)
 		. = ALIGN(4);
 		_etext = .;
@@ -21,6 +23,8 @@ SECTIONS
 	{
 		_sdata = .;
 		*(.data)
+		*(.init_array)
+		*(.fini_array)
 		. = ALIGN(4);
 		_edata = .;
 	}>SRAM1 AT> FLASH

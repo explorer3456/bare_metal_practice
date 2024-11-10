@@ -12,6 +12,7 @@ extern uint32_t _edata;
 extern uint32_t _sbss;
 extern uint32_t _ebss;
 int (main)(void);
+void __libc_init_array(void);
 
 void Reset_Handler(void);
 void NMI_Handler 					(void) __attribute__ ((weak, alias("Default_Handler")));
@@ -151,6 +152,8 @@ void Reset_Handler(void)
 	for(i=0; i<size/sizeof(uint32_t); i++) {
 		*(pSRAM + i) = 0;
 	}
+
+	__libc_init_array();
 
 	// call main.
 	main();

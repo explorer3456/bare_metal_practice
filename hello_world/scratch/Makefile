@@ -1,6 +1,6 @@
 CC=arm-none-eabi-gcc
-CFLAGS= -c -mcpu=cortex-m4 -mthumb -std=gnu11 -O0
-LDFLAGS= --specs=nano.specs -T stm32_ls.ld -Wl,-Map=final.map
+CFLAGS= -c -mcpu=cortex-m4 -mthumb -mfloat-abi=soft -std=gnu11 -O0
+LDFLAGS= --specs=nano.specs -mcpu=cortex-m4 -mthumb -mfloat-abi=soft -T stm32_ls.ld -Wl,-Map=final.map
 
 # $^ : dependency
 # $@ : target
