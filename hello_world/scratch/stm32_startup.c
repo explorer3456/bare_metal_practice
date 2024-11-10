@@ -7,6 +7,7 @@
 #define STACK_START	SRAM_END
 
 extern uint32_t _etext;
+extern uint32_t _la_data;
 extern uint32_t _sdata;
 extern uint32_t _edata;
 extern uint32_t _sbss;
@@ -138,7 +139,8 @@ void Reset_Handler(void)
 
 	// copy .data section to SRAM.
 	pSRAM = (uint32_t *)SRAM_START;
-	pSRC = (uint32_t *)(&_etext);
+	// pSRC = (uint32_t *)(&_etext);
+	pSRC = (uint32_t *)(&_la_data);
 	size = (uint32_t)&_edata - (uint32_t)&_sdata;
 
 	// copy data section from FLASH to SRAM.
